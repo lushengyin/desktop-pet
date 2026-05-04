@@ -395,7 +395,9 @@ function createTray() {
   const icon = nativeImage.createFromPath(trayIconPath).resize({ width: 18, height: 18 });
   tray = new Tray(icon.isEmpty() ? nativeImage.createFromNamedImage('NSStatusAvailable') : icon);
   updateTray();
-  tray.on('click', createSettingsWindow);
+  tray.on('click', () => {
+    tray?.popUpContextMenu();
+  });
 }
 
 function resetPetPosition() {

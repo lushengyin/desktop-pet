@@ -47,5 +47,6 @@ Updated: 2026-05-04
 - Sidebar scroll fix verification: passed after making the left navigation list independently scrollable.
 - HD Lulu asset verification: passed after generating transparent PNG spritesheet, rebuilding icons, and confirming `dist/pets/lulu/spritesheet.png` exists.
 - Pixel Lulu rollback verification: passed after restoring WebP spritesheet and confirming `dist/pets/lulu/spritesheet.webp` exists while PNG is absent.
+- Tray menu behavior verification: passed after changing tray click to only call `popUpContextMenu`.
 
 Known release note: macOS package uses ad-hoc signing and is not notarized.

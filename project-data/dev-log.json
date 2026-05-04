@@ -181,6 +181,15 @@
         "build/tray.png",
         "build/icon.icns"
       ]
+    },
+    {
+      "id": "LOG-2026-05-05-003",
+      "date": "2026-05-05",
+      "type": "fix",
+      "summary": "Tray 同时设置 context menu 和 click=createSettingsWindow，导致点击菜单栏图标时菜单弹出后立即打开设置窗口。已将 click 改为 popUpContextMenu，打开设置仅由菜单项触发。验证通过 typecheck、smoke、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/main/main.ts"
+      ]
     }
   ]
 }
