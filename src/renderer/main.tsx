@@ -25,6 +25,11 @@ const fallbackSnapshot: AppSnapshot = {
     sizeScale: 1,
     animationSpeed: 1,
     currentAction: 'idle',
+    cloudEnabled: true,
+    cloudMessages: [
+      '人，你真棒！',
+      '人，累了记得休息，我会一直陪着你'
+    ],
     theme: 'dark',
     launchAtLogin: false,
     soundEnabled: true,
@@ -82,10 +87,13 @@ function App() {
 function PetView({ snapshot, loading }: { snapshot: AppSnapshot; loading: boolean }) {
   const [mood, setMood] = useState<PetMood>('idle');
   const [frame, setFrame] = useState(0);
+  const [cloudIndex, setCloudIndex] = useState(0);
   const pet = useMemo(() => currentPet(snapshot), [snapshot]);
   const manifest = pet?.manifest;
   const columns = manifest?.columns ?? 8;
   const rows = manifest?.rows ?? 9;
+  const cloudMessages = sanitizeCloudMessages(snapshot.settings.cloudMessages);
+  const activeCloudMessage = cloudMessages[cloudIndex % cloudMessages.length] ?? '';
   const displayAction: PetAction = mood === 'dragging'
     ? 'running-right'
     : mood === 'happy'
@@ -105,6 +113,18 @@ function PetView({ snapshot, loading }: { snapshot: AppSnapshot; loading: boolea
     const timeout = window.setTimeout(() => setMood('idle'), 1200);
     return () => window.clearTimeout(timeout);
   }, [mood]);
+
+  useEffect(() => {
+    setCloudIndex(0);
+  }, [snapshot.settings.currentPetId, snapshot.settings.cloudMessages]);
+
+  useEffect(() => {
+    if (!snapshot.settings.cloudEnabled || cloudMessages.length < 2) return;
+    const timer = window.setInterval(() => {
+      setCloudIndex((value) => (value + 1) % cloudMessages.length);
+    }, 2600);
+    return () => window.clearInterval(timer);
+  }, [snapshot.settings.cloudEnabled, cloudMessages]);
 
   const spriteFrame = frames[frame] ?? 0;
   const x = spriteFrame % columns;
@@ -144,14 +164,22 @@ function PetView({ snapshot, loading }: { snapshot: AppSnapshot; loading: boolea
       onPointerCancel={endDrag}
       title={`${pet.displayName} - 双击互动`}
     >
-      <div
-        className={`pet-sprite mood-${mood}`}
-        style={{
-          backgroundImage: `url("${pet.spritesheetUrl}")`,
-          backgroundSize: `${columns * 100}% ${rows * 100}%`,
-          backgroundPosition: `${columns === 1 ? 0 : (x / (columns - 1)) * 100}% ${rows === 1 ? 0 : (y / (rows - 1)) * 100}%`
-        }}
-      />
+      <div className={`pet-rig mood-${mood}`}>
+        {snapshot.settings.cloudEnabled && activeCloudMessage && (
+          <div className="pet-cloud" key={`${snapshot.settings.currentPetId}-${cloudIndex}`}>
+            <span>{activeCloudMessage}</span>
+            <i />
+          </div>
+        )}
+        <div
+          className="pet-sprite"
+          style={{
+            backgroundImage: `url("${pet.spritesheetUrl}")`,
+            backgroundSize: `${columns * 100}% ${rows * 100}%`,
+            backgroundPosition: `${columns === 1 ? 0 : (x / (columns - 1)) * 100}% ${rows === 1 ? 0 : (y / (rows - 1)) * 100}%`
+          }}
+        />
+      </div>
     </div>
   );
 }
@@ -180,6 +208,7 @@ function SettingsView({
 }) {
   const [active, setActive] = useState<SectionId>('general');
   const [notice, setNotice] = useState('');
+  const [cloudDraft, setCloudDraft] = useState('');
   const pet = currentPet(snapshot);
 
   useEffect(() => {
@@ -187,6 +216,10 @@ function SettingsView({
     const timer = setTimeout(() => setNotice(''), 1600);
     return () => clearTimeout(timer);
   }, [notice]);
+
+  useEffect(() => {
+    setCloudDraft(snapshot.settings.cloudMessages.join('\n'));
+  }, [snapshot.settings.cloudMessages]);
 
   const importPet = async () => {
     const result = await window.lulu.importPet();
@@ -206,6 +239,13 @@ function SettingsView({
     const settings = await window.lulu.resetPetPosition();
     setSnapshot((current) => ({ ...current, settings }));
     setNotice('噜噜已经回到默认位置。');
+  };
+
+  const saveCloudMessages = async () => {
+    const nextMessages = sanitizeCloudMessages(cloudDraft.split('\n'));
+    await updateSettings({ cloudMessages: nextMessages });
+    setCloudDraft(nextMessages.join('\n'));
+    setNotice('云朵文案已更新。');
   };
 
   return (
@@ -301,6 +341,21 @@ function SettingsView({
                     <option key={action.id} value={action.id}>{action.label}</option>
                   ))}
                 </select>
+              </SettingRow>
+              <SettingRow title="云朵提示" caption="在宠物头顶显示漂浮云朵文案">
+                <Switch checked={snapshot.settings.cloudEnabled} onChange={(cloudEnabled) => updateSettings({ cloudEnabled })} />
+              </SettingRow>
+              <SettingRow title="云朵文案" caption="每行一条，自动循环播放">
+                <div className="cloud-editor">
+                  <textarea
+                    value={cloudDraft}
+                    rows={3}
+                    onChange={(event) => setCloudDraft(event.target.value)}
+                    onBlur={() => void saveCloudMessages()}
+                    placeholder="每行写一条给主人的话"
+                  />
+                  <button className="secondary-button" onClick={() => void saveCloudMessages()}>保存文案</button>
+                </div>
               </SettingRow>
             </Panel>
             <Panel title="宠物库">
@@ -404,6 +459,13 @@ function actionFrames(action: PetAction, columns: number) {
   if (action === 'running') return rowFrames(7, 6, columns);
   if (action === 'review') return rowFrames(8, 6, columns);
   return rowFrames(0, 6, columns);
+}
+
+function sanitizeCloudMessages(values: string[]) {
+  const messages = values.map((item) => item.trim()).filter(Boolean).slice(0, 12);
+  return messages.length > 0
+    ? messages
+    : ['人，你真棒！', '人，累了记得休息，我会一直陪着你'];
 }
 
 function sectionTitle(section: SectionId) {

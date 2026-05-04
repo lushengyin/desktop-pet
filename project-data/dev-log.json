@@ -222,6 +222,18 @@
         "public/pets/gugugaga/spritesheet.webp",
         "src/main/main.ts"
       ]
+    },
+    {
+      "id": "LOG-2026-05-05-007",
+      "date": "2026-05-05",
+      "type": "feature",
+      "summary": "新增 AppSettings.cloudEnabled/cloudMessages 持久化；宠物窗口渲染 pet-rig + pet-cloud，文案按 2.6 秒循环；设置页新增云朵提示开关和文案编辑器（每行一条，失焦或点击保存即生效）。验证通过 typecheck、smoke、package。",
+      "changedFiles": [
+        "src/shared/types.ts",
+        "src/main/main.ts",
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css"
+      ]
     }
   ]
 }

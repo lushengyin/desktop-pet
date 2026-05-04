@@ -39,3 +39,6 @@ Use `project-data/dev-log.json` as the source of truth.
 - 双击互动和拖拽动作仍保留临时覆盖逻辑，不影响默认动作设置。
 - 接入新内置宠物：`/Users/lusheng/.codex/pets/gugugaga` 已复制到 `public/pets/gugugaga`。
 - 主进程内置宠物加载从单个 `lulu` 改为目录扫描，后续新增内置宠物无需再改代码。
+- 新增云朵提示功能：`AppSettings` 增加 `cloudEnabled` 与 `cloudMessages` 并持久化。
+- 宠物窗口渲染改为 `pet-rig + pet-cloud`，云朵跟随宠物浮动，文案按 2.6 秒循环。
+- 设置页新增云朵提示开关与文案编辑器：每行一条，失焦或点击保存后即时生效。

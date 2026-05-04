@@ -38,6 +38,8 @@ export type AppSettings = {
   sizeScale: number;
   animationSpeed: number;
   currentAction: PetAction;
+  cloudEnabled: boolean;
+  cloudMessages: string[];
   theme: ThemeMode;
   launchAtLogin: boolean;
   soundEnabled: boolean;

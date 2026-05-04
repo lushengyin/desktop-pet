@@ -22,6 +22,11 @@ const defaultSettings: AppSettings = {
   sizeScale: 1,
   animationSpeed: 1,
   currentAction: 'idle',
+  cloudEnabled: true,
+  cloudMessages: [
+    '人，你真棒！',
+    '人，累了记得休息，我会一直陪着你'
+  ],
   theme: 'dark',
   launchAtLogin: false,
   soundEnabled: true,
@@ -73,6 +78,13 @@ function writeJson(file: string, value: unknown) {
 
 function sanitizeSettings(value: Partial<AppSettings>): AppSettings {
   const merged = { ...defaultSettings, ...value };
+  const cloudMessages = Array.isArray(merged.cloudMessages)
+    ? merged.cloudMessages
+      .filter((item): item is string => typeof item === 'string')
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .slice(0, 12)
+    : defaultSettings.cloudMessages;
   return {
     ...merged,
     petVisible: Boolean(merged.petVisible),
@@ -81,6 +93,8 @@ function sanitizeSettings(value: Partial<AppSettings>): AppSettings {
     currentAction: typeof merged.currentAction === 'string' && supportedActions.has(merged.currentAction as PetAction)
       ? merged.currentAction as PetAction
       : defaultSettings.currentAction,
+    cloudEnabled: Boolean(merged.cloudEnabled),
+    cloudMessages: cloudMessages.length > 0 ? cloudMessages : defaultSettings.cloudMessages,
     theme: merged.theme === 'system' ? 'system' : 'dark',
     launchAtLogin: Boolean(merged.launchAtLogin),
     soundEnabled: Boolean(merged.soundEnabled),
