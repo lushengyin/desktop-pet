@@ -28,3 +28,11 @@ Use `project-data/tasks.json` as the source of truth.
 
 - T4.1 建立宠物资源模型与自定义导入能力：done
 - T5.1 完成验证、构建和交付说明：done
+- T6.2 拖动方向联动奔跑动画：done
+- T6.3 通用品牌文案替换：done
+- T6.4 云朵气泡锚点与箭头优化：done
+- T6.5 云朵气泡距离微调：done
+- T6.6 云朵气泡距离再收近：done
+- T6.7 云朵气泡宽度自适应：done
+- T6.8 短文案气泡锚点修复：done
+- T6.9 设置窗口聚焦修复：done

@@ -137,9 +137,10 @@ function petSpriteSize(scale = getSettings().sizeScale) {
 }
 
 function petCloudInsets(scale = getSettings().sizeScale) {
+  void scale;
   return {
-    top: Math.round(118 * scale),
-    right: Math.round(168 * scale)
+    top: 118,
+    right: 168
   };
 }
 
@@ -217,9 +218,21 @@ function createPetWindow() {
 }
 
 function createSettingsWindow() {
+  const revealSettingsWindow = (window: BrowserWindow) => {
+    // macOS: Mission Control / app switcher can sometimes fail to focus the window
+    // when another Electron app is frontmost. A brief always-on-top toggle brings it forward reliably.
+    window.setAlwaysOnTop(true, 'modal-panel');
+    window.show();
+    window.focus();
+    setTimeout(() => {
+      if (!window.isDestroyed()) {
+        window.setAlwaysOnTop(false);
+      }
+    }, 280);
+  };
+
   if (settingsWindow && !settingsWindow.isDestroyed()) {
-    settingsWindow.show();
-    settingsWindow.focus();
+    revealSettingsWindow(settingsWindow);
     return;
   }
 
@@ -228,7 +241,7 @@ function createSettingsWindow() {
     height: 720,
     minWidth: 860,
     minHeight: 600,
-    title: 'Lulu Desktop Pet 设置',
+    title: '桌边小伴 设置',
     titleBarStyle: 'hiddenInset',
     backgroundColor: '#1d1d1f',
     show: false,
@@ -243,7 +256,8 @@ function createSettingsWindow() {
   void loadRenderer(settingsWindow, 'settings');
 
   settingsWindow.once('ready-to-show', () => {
-    settingsWindow?.show();
+    if (!settingsWindow || settingsWindow.isDestroyed()) return;
+    revealSettingsWindow(settingsWindow);
   });
 
   settingsWindow.on('closed', () => {
@@ -430,11 +444,11 @@ function updateTray() {
   const settings = getSettings();
   const icon = nativeImage.createFromPath(trayIconPath).resize({ width: 18, height: 18 });
   tray.setImage(icon.isEmpty() ? nativeImage.createFromNamedImage('NSStatusAvailable') : icon);
-  tray.setToolTip('Lulu Desktop Pet');
+  tray.setToolTip('Desk Buddy');
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: '打开设置', click: createSettingsWindow },
     {
-      label: settings.petVisible ? '隐藏噜噜' : '显示噜噜',
+      label: settings.petVisible ? '隐藏宠物' : '显示宠物',
       click: () => patchSettings({ petVisible: !settings.petVisible })
     },
     { label: '重置位置', click: resetPetPosition },

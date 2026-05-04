@@ -88,6 +88,7 @@ function App() {
 
 function PetView({ snapshot, loading }: { snapshot: AppSnapshot; loading: boolean }) {
   const [mood, setMood] = useState<PetMood>('idle');
+  const [dragAction, setDragAction] = useState<PetAction>('running-right');
   const [frame, setFrame] = useState(0);
   const [cloudIndex, setCloudIndex] = useState(0);
   const pet = useMemo(() => currentPet(snapshot), [snapshot]);
@@ -104,7 +105,7 @@ function PetView({ snapshot, loading }: { snapshot: AppSnapshot; loading: boolea
   );
   const activeCloudMessage = cloudMessages[cloudIndex % cloudMessages.length] ?? '';
   const displayAction: PetAction = mood === 'dragging'
-    ? 'running-right'
+    ? dragAction
     : mood === 'happy'
       ? 'waving'
       : snapshot.settings.currentAction;
@@ -141,12 +142,16 @@ function PetView({ snapshot, loading }: { snapshot: AppSnapshot; loading: boolea
 
   const startDrag = (event: React.PointerEvent<HTMLDivElement>) => {
     event.currentTarget.setPointerCapture(event.pointerId);
+    setDragAction('running-right');
     setMood('dragging');
     void window.lulu.beginPetDrag();
   };
 
   const drag = (event: React.PointerEvent<HTMLDivElement>) => {
     if (mood !== 'dragging') return;
+    if (Math.abs(event.movementX) >= 1) {
+      setDragAction(event.movementX > 0 ? 'running-right' : 'running-left');
+    }
     void window.lulu.dragPetBy({
       deltaX: event.movementX,
       deltaY: event.movementY
@@ -263,7 +268,7 @@ function SettingsView({
   const resetPosition = async () => {
     const settings = await window.lulu.resetPetPosition();
     setSnapshot((current) => ({ ...current, settings }));
-    setNotice('噜噜已经回到默认位置。');
+    setNotice('宠物已经回到默认位置。');
   };
 
   const saveCloudMessages = async () => {
@@ -281,8 +286,8 @@ function SettingsView({
         <div className="brand">
           <div className="brand-mark">Lu</div>
           <div>
-            <h1>Lulu</h1>
-            <p>Desktop Pet</p>
+            <h1>桌边小伴</h1>
+            <p>Desk Buddy</p>
           </div>
         </div>
         <nav className="nav-list">
@@ -313,7 +318,7 @@ function SettingsView({
         {notice && <div className="notice">{notice}</div>}
         {active === 'general' && (
           <Panel title="系统">
-            <SettingRow title="登录时打开" caption="启动 macOS 后自动显示 Lulu">
+            <SettingRow title="登录时打开" caption="启动 macOS 后自动显示宠物">
               <Switch checked={snapshot.settings.launchAtLogin} onChange={(launchAtLogin) => updateSettings({ launchAtLogin })} />
             </SettingRow>
             <SettingRow title="主题" caption="当前产品优先使用深色面板">
@@ -332,10 +337,10 @@ function SettingsView({
             <SettingRow title="显示宠物" caption="隐藏后可以从菜单栏重新显示">
               <Switch checked={snapshot.settings.petVisible} onChange={(petVisible) => updateSettings({ petVisible })} />
             </SettingRow>
-            <SettingRow title="宠物大小" caption="调整后立即应用到桌面宠物">
+            <SettingRow title="宠物大小" caption="调整后立即应用到桌边小伴">
               <Range value={snapshot.settings.sizeScale} min={0.5} max={2.5} step={0.1} suffix="x" onChange={(sizeScale) => updateSettings({ sizeScale })} />
             </SettingRow>
-            <SettingRow title="重置位置" caption="把 Lulu 放回当前主屏幕右下角">
+            <SettingRow title="重置位置" caption="把宠物放回当前主屏幕右下角">
               <button className="secondary-button" onClick={resetPosition}><RotateCcw size={16} />重置位置</button>
             </SettingRow>
           </Panel>
@@ -346,7 +351,7 @@ function SettingsView({
               <div className="pet-detail">
                 <PetPreview pet={pet} />
                 <div>
-                  <h3>{pet?.displayName ?? '噜噜'}</h3>
+                  <h3>{pet?.displayName ?? '宠物'}</h3>
                   <p>{pet?.description ?? '默认桌面伙伴'}</p>
                   <div className="tag-row">
                     <span>8 x 9 Atlas</span>
@@ -358,7 +363,7 @@ function SettingsView({
               <SettingRow title="动画速度" caption="控制待机和互动动画播放速度">
                 <Range value={snapshot.settings.animationSpeed} min={0.5} max={2} step={0.1} suffix="x" onChange={(animationSpeed) => updateSettings({ animationSpeed })} />
               </SettingRow>
-              <SettingRow title="当前动作" caption="选择 Lulu 在桌面的默认循环动作">
+              <SettingRow title="当前动作" caption="选择宠物在桌面的默认循环动作">
                 <select
                   value={snapshot.settings.currentAction}
                   onChange={(event) => updateSettings({ currentAction: event.target.value as AppSettings['currentAction'] })}
@@ -419,13 +424,13 @@ function SettingsView({
         )}
         {active === 'behavior' && (
           <Panel title="行为">
-            <SettingRow title="双击互动" caption="双击 Lulu 会触发开心动画">
+            <SettingRow title="双击互动" caption="双击宠物会触发开心动画">
               <Switch checked onChange={() => undefined} />
             </SettingRow>
             <SettingRow title="位置保护" caption="拖动时限制在当前显示器工作区域内">
               <Switch checked onChange={() => undefined} />
             </SettingRow>
-            <SettingRow title="配置恢复" caption="资源缺失或配置损坏时恢复默认 Lulu">
+            <SettingRow title="配置恢复" caption="资源缺失或配置损坏时恢复默认宠物">
               <Switch checked onChange={() => undefined} />
             </SettingRow>
           </Panel>
@@ -452,7 +457,7 @@ function SettingsView({
         )}
         {active === 'about' && (
           <Panel title="关于">
-            <SettingRow title="版本" caption="Lulu Desktop Pet">
+            <SettingRow title="版本" caption="Desk Buddy">
               <span className="value-text">{snapshot.version}</span>
             </SettingRow>
             <SettingRow title="运行平台" caption="当前桌面环境">
@@ -531,9 +536,10 @@ function sanitizeCloudMessages(values: string[]) {
 }
 
 function petCloudLayout(scale: number) {
+  void scale;
   return {
-    top: Math.round(118 * scale),
-    right: Math.round(168 * scale)
+    top: 118,
+    right: 168
   };
 }
 
@@ -542,7 +548,7 @@ function sectionTitle(section: SectionId) {
 }
 
 function sectionCaption(section: SectionId) {
-  return navItems.find((item) => item.id === section)?.caption ?? 'Lulu Desktop Pet';
+  return navItems.find((item) => item.id === section)?.caption ?? 'Desk Buddy';
 }
 
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {

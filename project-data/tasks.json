@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-05-04",
+  "updatedAt": "2026-05-05",
   "statusValues": [
     "todo",
     "doing",
@@ -377,6 +377,223 @@
         "R10",
         "R11",
         "R12"
+      ]
+    },
+    {
+      "id": "T6.2",
+      "milestoneId": "M6",
+      "title": "拖动方向联动奔跑动画",
+      "status": "done",
+      "attempts": 1,
+      "priority": "P1",
+      "output": "拖动宠物时根据鼠标移动方向切换向左/向右奔跑动画。",
+      "steps": [
+        "拖动中采集 movementX 符号",
+        "根据方向在 running-left/running-right 间切换显示动作",
+        "保持拖动结束后回到用户设置的默认动作"
+      ],
+      "acceptanceCriteria": [
+        "往右拖动时显示 running-right",
+        "往左拖动时显示 running-left",
+        "松手后恢复非拖动状态"
+      ],
+      "verification": [
+        "pnpm run typecheck",
+        "pnpm run package"
+      ],
+      "linkedRequirements": [
+        "R4",
+        "R7"
+      ]
+    },
+    {
+      "id": "T6.3",
+      "milestoneId": "M6",
+      "title": "通用品牌文案替换",
+      "status": "done",
+      "attempts": 1,
+      "priority": "P1",
+      "output": "将 UI 中绑定单一宠物名的通用文案替换为更通用的品牌名“桌边小伴 / Desk Buddy”。",
+      "steps": [
+        "替换设置侧边栏头部标题与说明",
+        "替换 Tray tooltip 与设置窗口标题",
+        "替换通用说明文案中出现的单一宠物名"
+      ],
+      "acceptanceCriteria": [
+        "设置面板头部不再显示单一宠物名",
+        "Tray tooltip 与设置窗口标题使用通用品牌名",
+        "宠物具体 displayName 仍只用于宠物本身"
+      ],
+      "verification": [
+        "pnpm run typecheck",
+        "pnpm run package"
+      ],
+      "linkedRequirements": [
+        "R7",
+        "R8",
+        "R9"
+      ]
+    },
+    {
+      "id": "T6.4",
+      "milestoneId": "M6",
+      "title": "云朵气泡锚点与箭头优化",
+      "status": "done",
+      "attempts": 1,
+      "priority": "P1",
+      "output": "云朵气泡箭头更贴近宠物头部方向，并在宠物缩放变化时保持与头部相对位置稳定。",
+      "steps": [
+        "将云朵安全区从随 scale 放大改为固定像素",
+        "调整云朵箭头菱形位置使其更贴近头部",
+        "验证不同 sizeScale 下气泡与头部相对距离一致"
+      ],
+      "acceptanceCriteria": [
+        "气泡箭头在视觉上指向宠物头部附近",
+        "sizeScale 变大时气泡不会被推得越来越远",
+        "云朵仍不被窗口裁切"
+      ],
+      "verification": [
+        "pnpm run typecheck",
+        "pnpm run package"
+      ],
+      "linkedRequirements": [
+        "R7",
+        "R8",
+        "R11"
+      ]
+    },
+    {
+      "id": "T6.5",
+      "milestoneId": "M6",
+      "title": "云朵气泡距离微调",
+      "status": "done",
+      "attempts": 1,
+      "priority": "P1",
+      "output": "在不遮挡宠物的前提下，将云朵气泡与宠物头部的距离收近，提升观感与可读性。",
+      "steps": [
+        "调整云朵气泡 top/right 偏移使其更靠近头部",
+        "微调箭头位置保持指向头部附近",
+        "验证不同 sizeScale 下相对距离与可见性"
+      ],
+      "acceptanceCriteria": [
+        "气泡与宠物间距明显缩短",
+        "气泡不遮挡宠物脸部或关键轮廓",
+        "气泡在窗口内完整可见"
+      ],
+      "verification": [
+        "pnpm run typecheck",
+        "pnpm run package"
+      ],
+      "linkedRequirements": [
+        "R7",
+        "R8"
+      ]
+    },
+    {
+      "id": "T6.6",
+      "milestoneId": "M6",
+      "title": "云朵气泡距离再收近",
+      "status": "done",
+      "attempts": 1,
+      "priority": "P1",
+      "output": "在不遮挡宠物的前提下，进一步减少气泡与宠物之间的空隙。",
+      "steps": [
+        "进一步调整云朵气泡 top/right 偏移常量",
+        "保持箭头指向头部附近",
+        "验证不同 sizeScale 下不遮挡且不裁切"
+      ],
+      "acceptanceCriteria": [
+        "气泡与宠物之间的空距离减少",
+        "气泡不遮挡宠物脸部或关键轮廓",
+        "气泡仍在窗口内完整可见"
+      ],
+      "verification": [
+        "pnpm run typecheck",
+        "pnpm run package"
+      ],
+      "linkedRequirements": [
+        "R7",
+        "R8"
+      ]
+    },
+    {
+      "id": "T6.7",
+      "milestoneId": "M6",
+      "title": "云朵气泡宽度自适应",
+      "status": "done",
+      "attempts": 1,
+      "priority": "P1",
+      "output": "云朵气泡宽度随文案长度动态收缩；短文本不再显示过长气泡，长文本在上限宽度内自动换行。",
+      "steps": [
+        "将云朵气泡宽度改为 fit-content",
+        "设置 max-width 限制并保持长文案可读换行",
+        "设置合理 min-width 避免过窄"
+      ],
+      "acceptanceCriteria": [
+        "短文案气泡宽度明显缩短",
+        "长文案在最大宽度处自动换行",
+        "气泡布局不抖动、不溢出窗口"
+      ],
+      "verification": [
+        "pnpm run typecheck",
+        "pnpm run package"
+      ],
+      "linkedRequirements": [
+        "R7",
+        "R8"
+      ]
+    },
+    {
+      "id": "T6.8",
+      "milestoneId": "M6",
+      "title": "短文案气泡锚点修复",
+      "status": "done",
+      "attempts": 1,
+      "priority": "P1",
+      "output": "修复短文案时云朵气泡因锚点选择导致距离宠物头部过远的问题，气泡始终贴近头部且不遮挡。",
+      "steps": [
+        "将云朵气泡定位从 right 锚定改为 left 锚定",
+        "调整箭头定位随锚点变化保持指向头部附近",
+        "验证短/长文案下气泡都贴近头部"
+      ],
+      "acceptanceCriteria": [
+        "短文案时气泡不再漂到远离宠物的位置",
+        "气泡靠近宠物头部且不遮挡",
+        "长文案仍能正常换行并保持定位合理"
+      ],
+      "verification": [
+        "pnpm run typecheck",
+        "pnpm run package"
+      ],
+      "linkedRequirements": [
+        "R7",
+        "R8"
+      ]
+    },
+    {
+      "id": "T6.9",
+      "milestoneId": "M6",
+      "title": "设置窗口聚焦修复",
+      "status": "done",
+      "attempts": 1,
+      "priority": "P1",
+      "output": "修复从 Mission Control/应用切换器回到应用时设置窗口闪现后无法聚焦的问题，确保可稳定切换到设置面板。",
+      "steps": [
+        "为设置窗口实现可靠 bring-to-front 逻辑",
+        "打开/聚焦时短暂提升 always-on-top 级别并 focus",
+        "延迟撤销 always-on-top，避免长期置顶"
+      ],
+      "acceptanceCriteria": [
+        "从其他应用通过 Mission Control 选择设置窗口可正常聚焦",
+        "从 Codex 等 Electron 应用通过 Mission Control 选择设置窗口可正常聚焦",
+        "设置窗口不长期保持 always-on-top"
+      ],
+      "verification": [
+        "pnpm run typecheck",
+        "pnpm run package"
+      ],
+      "linkedRequirements": [
+        "R7"
       ]
     }
   ]

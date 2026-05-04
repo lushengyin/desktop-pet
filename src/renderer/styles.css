@@ -95,10 +95,11 @@ button {
 
 .pet-cloud {
   position: absolute;
-  top: calc(-1 * var(--cloud-gutter-top, 0px) + 18px);
-  right: calc(-1 * var(--cloud-gutter-right, 0px) + 18px);
-  width: min(220px, calc(100% + var(--cloud-gutter-right, 0px) - 12px));
-  min-width: 112px;
+  top: calc(-1 * var(--cloud-gutter-top, 0px) + 66px);
+  left: 18px;
+  width: fit-content;
+  max-width: min(220px, calc(100% + var(--cloud-gutter-right, 0px) - 12px));
+  min-width: 84px;
   padding: 9px 12px;
   border-radius: 16px;
   font-size: 11px;
@@ -121,8 +122,8 @@ button {
 
 .pet-cloud > i {
   position: absolute;
-  right: 18px;
-  bottom: -6px;
+  left: 92px;
+  bottom: -4px;
   width: 12px;
   height: 12px;
   background: rgb(255 255 255 / 0.92);

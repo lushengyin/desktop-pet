@@ -28,3 +28,11 @@ Use `project-data/dev-log.json` as the source of truth.
 - 云朵循环定时器依赖 cloudMessages 数组引用导致重复重置，现改为 useMemo 稳定引用后正常循环。设置页文案输入改为独立弹窗：大文本框、文案预览标签、保存/取消操作。验证通过 typecheck、smoke、package。
 - 为云朵提示新增 AppSettings.cloudOffsetX/cloudOffsetY 持久化设置；宠物窗口在开启云朵时为精灵预留右上安全区，云朵改为可换行且支持偏移 CSS 变量；设置页新增左右/上下偏移滑杆。验证通过 typecheck、smoke、package。
 - 将宠物窗口尺寸改为精灵尺寸加云朵安全区，设置中的 petPosition 继续表示宠物精灵位置；渲染层新增 pet-anchor，相对宠物布局云朵并允许在更大透明窗口中显示，避免文字超出后被原窗口裁切。验证通过 typecheck、smoke、package。
+- 拖动宠物时根据拖动方向切换奔跑动作：往右拖动播放 running-right，往左拖动播放 running-left。验证通过 typecheck、package。
+- 为支持未来多宠物，将 UI 中绑定单一宠物名的通用文案改为更通用的品牌名“桌边小伴 / Desk Buddy”，并同步更新 Tray tooltip、设置窗口标题与相关说明文案。验证通过 typecheck、package。
+- 修复云朵气泡在宠物缩放变大时与头部距离越来越远的问题：云朵安全区不再随 sizeScale 放大，保持与头部相对位置恒定；同时调整箭头菱形位置，使其更贴近宠物头部方向。验证通过 typecheck、package。
+- 云朵气泡与宠物的距离调整为更贴近头部且不遮挡：收紧气泡 top/right 偏移，并微调箭头位置。验证通过 typecheck、package。
+- 云朵气泡距离再次收近：进一步增大气泡 top/right 偏移常量，使气泡更贴近宠物头部且保持不遮挡。验证通过 typecheck、package。
+- 云朵气泡宽度改为随文案自适应：使用 fit-content 收缩短文本气泡宽度，并以 max-width 限制长文本自动换行。验证通过 typecheck、package。
+- 修复云朵气泡在短文案时因 right 锚定导致整体漂远的问题：将气泡定位锚点改为以宠物头部为基准的 left 锚定，并同步调整箭头定位。验证通过 typecheck、package。
+- 修复从 Mission Control/切换器返回时设置窗口闪现后无法聚焦的问题：打开设置窗口时短暂提升 always-on-top 级别以可靠 bring-to-front，随后自动撤销。验证通过 typecheck、package。
