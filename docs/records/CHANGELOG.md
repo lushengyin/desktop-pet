@@ -18,3 +18,4 @@ Use `project-data/changelog.json` as the source of truth.
 ## 2026-05-05
 
 - 将噜噜资源替换为用户提供的高清 PNG，生成透明背景 `spritesheet.png`，并重做菜单栏图标和应用图标。
+- 按用户要求将噜噜资源恢复为前一版像素风 WebP 精灵表，并重做菜单栏图标和应用图标。

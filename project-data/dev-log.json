@@ -168,6 +168,19 @@
         "build/tray.png",
         "build/icon.icns"
       ]
+    },
+    {
+      "id": "LOG-2026-05-05-002",
+      "date": "2026-05-05",
+      "type": "asset",
+      "summary": "从历史提交 3c670df 恢复 public/pets/lulu/pet.json 与 spritesheet.webp，移除高清 spritesheet.png，使用旧 WebP 首帧重做 build/tray.png 和 build/icon.icns。验证通过 typecheck、smoke、package、打包产物 smoke test，dist 已恢复 WebP 像素风资源。",
+      "changedFiles": [
+        "public/pets/lulu/pet.json",
+        "public/pets/lulu/spritesheet.webp",
+        "public/pets/lulu/spritesheet.png",
+        "build/tray.png",
+        "build/icon.icns"
+      ]
     }
   ]
 }
