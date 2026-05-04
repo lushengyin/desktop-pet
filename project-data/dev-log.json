@@ -136,6 +136,16 @@
       "changedFiles": [
         "src/renderer/styles.css"
       ]
+    },
+    {
+      "id": "LOG-2026-05-04-010",
+      "date": "2026-05-04",
+      "type": "fix",
+      "summary": "hiddenInset 设置窗口缺少可拖动区域，导致窗口无法移动。已添加 window-drag-region，侧边栏和标题区域支持拖动，交互控件设置 -webkit-app-region: no-drag。验证通过 typecheck、smoke、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css"
+      ]
     }
   ]
 }

@@ -43,5 +43,6 @@ Updated: 2026-05-04
 - Size scaling fix verification: passed after changing desktop sprite rendering to fill the resized pet window.
 - Reset position fix verification: passed after changing settings application to respect saved `petPosition`.
 - Settings content layout fix verification: passed after increasing top and bottom content padding for the hidden titlebar window.
+- Window drag fix verification: passed after adding Electron app-region drag/no-drag zones.
 
 Known release note: macOS package uses ad-hoc signing and is not notarized.

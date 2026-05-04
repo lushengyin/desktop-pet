@@ -23,6 +23,7 @@ button,
 select,
 input {
   font: inherit;
+  -webkit-app-region: no-drag;
 }
 
 button {
@@ -69,6 +70,7 @@ button {
 }
 
 .settings-shell {
+  position: relative;
   display: grid;
   grid-template-columns: 340px minmax(0, 1fr);
   width: 100%;
@@ -77,6 +79,16 @@ button {
     radial-gradient(circle at 18% 8%, rgb(255 255 255 / 0.12), transparent 28%),
     linear-gradient(135deg, #252526 0%, #18191b 45%, #111214 100%);
   color: #f6f6f8;
+}
+
+.window-drag-region {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 72px;
+  z-index: 5;
+  -webkit-app-region: drag;
 }
 
 .sidebar {
@@ -88,6 +100,11 @@ button {
   flex-direction: column;
   gap: 24px;
   min-width: 0;
+  -webkit-app-region: drag;
+}
+
+.sidebar * {
+  -webkit-app-region: no-drag;
 }
 
 .brand {
@@ -200,6 +217,14 @@ button {
   min-width: 0;
   scroll-padding-top: 92px;
   scroll-padding-bottom: 72px;
+}
+
+.content-header {
+  -webkit-app-region: drag;
+}
+
+.content-header * {
+  -webkit-app-region: no-drag;
 }
 
 .content-header {

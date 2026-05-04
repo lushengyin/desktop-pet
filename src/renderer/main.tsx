@@ -202,6 +202,7 @@ function SettingsView({
 
   return (
     <main className="settings-shell">
+      <div className="window-drag-region" aria-hidden="true" />
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark">Lu</div>
