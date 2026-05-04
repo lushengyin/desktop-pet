@@ -42,3 +42,5 @@ Use `project-data/dev-log.json` as the source of truth.
 - 新增云朵提示功能：`AppSettings` 增加 `cloudEnabled` 与 `cloudMessages` 并持久化。
 - 宠物窗口渲染改为 `pet-rig + pet-cloud`，云朵跟随宠物浮动，文案按 2.6 秒循环。
 - 设置页新增云朵提示开关与文案编辑器：每行一条，失焦或点击保存后即时生效。
+- 修复云朵文案循环：`cloudMessages` 依赖改为稳定引用，避免定时器每帧重置导致只显示第一条。
+- 文案编辑改为独立弹窗：更大输入区域、预览标签、保存与取消操作，避免在主设置行内挤压布局。

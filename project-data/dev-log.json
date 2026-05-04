@@ -234,6 +234,16 @@
         "src/renderer/main.tsx",
         "src/renderer/styles.css"
       ]
+    },
+    {
+      "id": "LOG-2026-05-05-008",
+      "date": "2026-05-05",
+      "type": "fix",
+      "summary": "云朵循环定时器依赖 cloudMessages 数组引用导致重复重置，现改为 useMemo 稳定引用后正常循环。设置页文案输入改为独立弹窗：大文本框、文案预览标签、保存/取消操作。验证通过 typecheck、smoke、package。",
+      "changedFiles": [
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css"
+      ]
     }
   ]
 }

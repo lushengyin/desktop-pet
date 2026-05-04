@@ -92,7 +92,10 @@ function PetView({ snapshot, loading }: { snapshot: AppSnapshot; loading: boolea
   const manifest = pet?.manifest;
   const columns = manifest?.columns ?? 8;
   const rows = manifest?.rows ?? 9;
-  const cloudMessages = sanitizeCloudMessages(snapshot.settings.cloudMessages);
+  const cloudMessages = useMemo(
+    () => sanitizeCloudMessages(snapshot.settings.cloudMessages),
+    [snapshot.settings.cloudMessages]
+  );
   const activeCloudMessage = cloudMessages[cloudIndex % cloudMessages.length] ?? '';
   const displayAction: PetAction = mood === 'dragging'
     ? 'running-right'
@@ -209,6 +212,7 @@ function SettingsView({
   const [active, setActive] = useState<SectionId>('general');
   const [notice, setNotice] = useState('');
   const [cloudDraft, setCloudDraft] = useState('');
+  const [cloudEditorOpen, setCloudEditorOpen] = useState(false);
   const pet = currentPet(snapshot);
 
   useEffect(() => {
@@ -246,6 +250,7 @@ function SettingsView({
     await updateSettings({ cloudMessages: nextMessages });
     setCloudDraft(nextMessages.join('\n'));
     setNotice('云朵文案已更新。');
+    setCloudEditorOpen(false);
   };
 
   return (
@@ -345,17 +350,8 @@ function SettingsView({
               <SettingRow title="云朵提示" caption="在宠物头顶显示漂浮云朵文案">
                 <Switch checked={snapshot.settings.cloudEnabled} onChange={(cloudEnabled) => updateSettings({ cloudEnabled })} />
               </SettingRow>
-              <SettingRow title="云朵文案" caption="每行一条，自动循环播放">
-                <div className="cloud-editor">
-                  <textarea
-                    value={cloudDraft}
-                    rows={3}
-                    onChange={(event) => setCloudDraft(event.target.value)}
-                    onBlur={() => void saveCloudMessages()}
-                    placeholder="每行写一条给主人的话"
-                  />
-                  <button className="secondary-button" onClick={() => void saveCloudMessages()}>保存文案</button>
-                </div>
+              <SettingRow title="云朵文案" caption={`当前 ${snapshot.settings.cloudMessages.length} 条，点击编辑`}>
+                <button className="secondary-button" onClick={() => setCloudEditorOpen(true)}>编辑文案</button>
               </SettingRow>
             </Panel>
             <Panel title="宠物库">
@@ -425,6 +421,29 @@ function SettingsView({
           </Panel>
         )}
       </section>
+      {cloudEditorOpen && (
+        <div className="modal-backdrop" onClick={() => setCloudEditorOpen(false)}>
+          <div className="cloud-modal" onClick={(event) => event.stopPropagation()}>
+            <h3>编辑云朵文案</h3>
+            <p>每行一条，宠物会循环播放这些话。</p>
+            <textarea
+              value={cloudDraft}
+              rows={8}
+              onChange={(event) => setCloudDraft(event.target.value)}
+              placeholder="每行写一条给主人的话"
+            />
+            <div className="cloud-preview">
+              {sanitizeCloudMessages(cloudDraft.split('\n')).map((item) => (
+                <span key={item}>{item}</span>
+              ))}
+            </div>
+            <div className="cloud-modal-actions">
+              <button className="secondary-button" onClick={() => setCloudEditorOpen(false)}>取消</button>
+              <button className="primary-button" onClick={() => void saveCloudMessages()}>保存文案</button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

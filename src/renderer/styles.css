@@ -575,6 +575,66 @@ input[type="range"] {
   min-height: 82px;
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgb(0 0 0 / 0.45);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.cloud-modal {
+  width: min(640px, calc(100vw - 40px));
+  border-radius: 18px;
+  border: 1px solid rgb(255 255 255 / 0.18);
+  background: linear-gradient(165deg, rgb(48 49 54 / 0.96), rgb(26 27 31 / 0.96));
+  box-shadow: 0 28px 56px rgb(0 0 0 / 0.38);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cloud-modal h3 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.cloud-modal p {
+  margin: 0;
+  color: #b0b0b7;
+}
+
+.cloud-modal textarea {
+  min-height: 180px;
+  width: 100%;
+}
+
+.cloud-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cloud-preview > span {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: #dbe9ff;
+  background: rgb(72 120 245 / 0.24);
+  border: 1px solid rgb(128 171 255 / 0.35);
+}
+
+.cloud-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
 .empty-state {
   min-height: 280px;
   display: grid;
