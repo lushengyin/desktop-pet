@@ -2,7 +2,7 @@ import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, screen, shell, 
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { AppSettings, AppSnapshot, DragDelta, ImportPetResult, PetLibraryItem, PetManifest, SettingsPatch } from '../shared/types.js';
+import type { AppSettings, AppSnapshot, DragDelta, ImportPetResult, PetAction, PetLibraryItem, PetManifest, SettingsPatch } from '../shared/types.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,12 +21,24 @@ const defaultSettings: AppSettings = {
   petVisible: true,
   sizeScale: 1,
   animationSpeed: 1,
+  currentAction: 'idle',
   theme: 'dark',
   launchAtLogin: false,
   soundEnabled: true,
   currentPetId: 'lulu',
   petPosition: null
 };
+const supportedActions: Set<PetAction> = new Set([
+  'idle',
+  'running-right',
+  'running-left',
+  'waving',
+  'jumping',
+  'failed',
+  'waiting',
+  'running',
+  'review'
+]);
 
 let petWindow: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
@@ -66,6 +78,9 @@ function sanitizeSettings(value: Partial<AppSettings>): AppSettings {
     petVisible: Boolean(merged.petVisible),
     sizeScale: clamp(Number(merged.sizeScale) || defaultSettings.sizeScale, 0.5, 2.5),
     animationSpeed: clamp(Number(merged.animationSpeed) || defaultSettings.animationSpeed, 0.5, 2),
+    currentAction: typeof merged.currentAction === 'string' && supportedActions.has(merged.currentAction as PetAction)
+      ? merged.currentAction as PetAction
+      : defaultSettings.currentAction,
     theme: merged.theme === 'system' ? 'system' : 'dark',
     launchAtLogin: Boolean(merged.launchAtLogin),
     soundEnabled: Boolean(merged.soundEnabled),

@@ -35,3 +35,5 @@ Use `project-data/dev-log.json` as the source of truth.
 - 验证通过：`pnpm run typecheck`、`pnpm run smoke`、`pnpm run package`、打包产物 smoke test；`dist` 已恢复 WebP 资源。
 - 修复菜单栏点击行为：Tray 点击改为 `popUpContextMenu`，打开设置只由菜单项触发，避免下拉菜单闪退。
 - 修复设置提示体验：原 `notice` 在内容流内渲染，会挤压页面并要求用户滚到顶部查看；现改为 fixed toast，居中浮在窗口上方，不参与布局，1.6 秒自动消失。
+- 新增“当前动作”功能：`AppSettings` 增加 `currentAction` 并持久化；宠物页增加动作下拉，默认动作可实时切换和预览。
+- 双击互动和拖拽动作仍保留临时覆盖逻辑，不影响默认动作设置。

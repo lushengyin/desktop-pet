@@ -200,6 +200,17 @@
         "src/renderer/main.tsx",
         "src/renderer/styles.css"
       ]
+    },
+    {
+      "id": "LOG-2026-05-05-005",
+      "date": "2026-05-05",
+      "type": "feature",
+      "summary": "新增 AppSettings.currentAction 和动作映射：待机、向右/向左奔跑、挥手、跳跃、沮丧、等待、思考、复盘。宠物页增加“当前动作”下拉；拖拽和双击互动动作仍可临时覆盖。验证通过 typecheck、smoke、package。",
+      "changedFiles": [
+        "src/shared/types.ts",
+        "src/main/main.ts",
+        "src/renderer/main.tsx"
+      ]
     }
   ]
 }

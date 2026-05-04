@@ -1,6 +1,16 @@
 export type PetMood = 'idle' | 'dragging' | 'happy' | 'sleepy';
 
 export type ThemeMode = 'dark' | 'system';
+export type PetAction =
+  | 'idle'
+  | 'running-right'
+  | 'running-left'
+  | 'waving'
+  | 'jumping'
+  | 'failed'
+  | 'waiting'
+  | 'running'
+  | 'review';
 
 export type PetManifest = {
   id: string;
@@ -27,6 +37,7 @@ export type AppSettings = {
   petVisible: boolean;
   sizeScale: number;
   animationSpeed: number;
+  currentAction: PetAction;
   theme: ThemeMode;
   launchAtLogin: boolean;
   soundEnabled: boolean;

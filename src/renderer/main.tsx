@@ -16,7 +16,7 @@ import {
   Sparkles,
   Volume2
 } from 'lucide-react';
-import type { AppSettings, AppSnapshot, PetLibraryItem, PetMood } from '../shared/types';
+import type { AppSettings, AppSnapshot, PetAction, PetLibraryItem, PetMood } from '../shared/types';
 import './styles.css';
 
 const fallbackSnapshot: AppSnapshot = {
@@ -24,6 +24,7 @@ const fallbackSnapshot: AppSnapshot = {
     petVisible: true,
     sizeScale: 1,
     animationSpeed: 1,
+    currentAction: 'idle',
     theme: 'dark',
     launchAtLogin: false,
     soundEnabled: true,
@@ -85,11 +86,12 @@ function PetView({ snapshot, loading }: { snapshot: AppSnapshot; loading: boolea
   const manifest = pet?.manifest;
   const columns = manifest?.columns ?? 8;
   const rows = manifest?.rows ?? 9;
-  const frames = mood === 'dragging'
-    ? rowFrames(1, 8, columns)
+  const displayAction: PetAction = mood === 'dragging'
+    ? 'running-right'
     : mood === 'happy'
-      ? rowFrames(3, 4, columns)
-      : rowFrames(0, 6, columns);
+      ? 'waving'
+      : snapshot.settings.currentAction;
+  const frames = actionFrames(displayAction, columns);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -290,6 +292,16 @@ function SettingsView({
               <SettingRow title="动画速度" caption="控制待机和互动动画播放速度">
                 <Range value={snapshot.settings.animationSpeed} min={0.5} max={2} step={0.1} suffix="x" onChange={(animationSpeed) => updateSettings({ animationSpeed })} />
               </SettingRow>
+              <SettingRow title="当前动作" caption="选择 Lulu 在桌面的默认循环动作">
+                <select
+                  value={snapshot.settings.currentAction}
+                  onChange={(event) => updateSettings({ currentAction: event.target.value as AppSettings['currentAction'] })}
+                >
+                  {actionLabels.map((action) => (
+                    <option key={action.id} value={action.id}>{action.label}</option>
+                  ))}
+                </select>
+              </SettingRow>
             </Panel>
             <Panel title="宠物库">
               <div className="pet-grid">
@@ -368,6 +380,30 @@ function currentPet(snapshot: AppSnapshot) {
 
 function rowFrames(row: number, count: number, columns: number) {
   return Array.from({ length: count }, (_value, index) => row * columns + index);
+}
+
+const actionLabels: { id: PetAction; label: string }[] = [
+  { id: 'idle', label: '待机' },
+  { id: 'running-right', label: '向右奔跑' },
+  { id: 'running-left', label: '向左奔跑' },
+  { id: 'waving', label: '挥手' },
+  { id: 'jumping', label: '跳跃' },
+  { id: 'failed', label: '沮丧' },
+  { id: 'waiting', label: '等待' },
+  { id: 'running', label: '思考' },
+  { id: 'review', label: '复盘' }
+];
+
+function actionFrames(action: PetAction, columns: number) {
+  if (action === 'running-right') return rowFrames(1, 8, columns);
+  if (action === 'running-left') return rowFrames(2, 8, columns);
+  if (action === 'waving') return rowFrames(3, 4, columns);
+  if (action === 'jumping') return rowFrames(4, 5, columns);
+  if (action === 'failed') return rowFrames(5, 8, columns);
+  if (action === 'waiting') return rowFrames(6, 6, columns);
+  if (action === 'running') return rowFrames(7, 6, columns);
+  if (action === 'review') return rowFrames(8, 6, columns);
+  return rowFrames(0, 6, columns);
 }
 
 function sectionTitle(section: SectionId) {
