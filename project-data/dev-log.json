@@ -146,6 +146,15 @@
         "src/renderer/main.tsx",
         "src/renderer/styles.css"
       ]
+    },
+    {
+      "id": "LOG-2026-05-04-011",
+      "date": "2026-05-04",
+      "type": "fix",
+      "summary": "左侧导航原本随侧栏固定布局，窗口高度不足时底部选项不可达。已将 nav-list 设置为独立 overflow-y auto 区域，并添加底部留白和细滚动条。验证通过 typecheck、smoke、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/renderer/styles.css"
+      ]
     }
   ]
 }

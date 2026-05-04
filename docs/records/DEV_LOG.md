@@ -23,3 +23,4 @@ Use `project-data/dev-log.json` as the source of truth.
 - 修复“重置位置”无效问题：`applySettings` 现在优先使用 `settings.petPosition`，`resetPetPosition` 保存默认坐标后直接 `setBounds` 移动窗口。
 - 修复设置内容显示不完整问题：`hiddenInset` 标题栏会覆盖顶部内容，已增加 `.settings-content` 顶部安全间距、底部留白和滚动 padding。
 - 修复设置窗口不能拖动问题：添加 `.window-drag-region`，侧边栏和标题区域设为 `-webkit-app-region: drag`，控件设为 `no-drag`。
+- 为左侧导航添加独立滚动：`.nav-list` 使用 `overflow-y: auto`、底部留白和细滚动条，避免小窗口下底部选项不可达。

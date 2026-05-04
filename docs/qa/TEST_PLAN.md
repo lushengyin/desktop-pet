@@ -44,5 +44,6 @@ Updated: 2026-05-04
 - Reset position fix verification: passed after changing settings application to respect saved `petPosition`.
 - Settings content layout fix verification: passed after increasing top and bottom content padding for the hidden titlebar window.
 - Window drag fix verification: passed after adding Electron app-region drag/no-drag zones.
+- Sidebar scroll fix verification: passed after making the left navigation list independently scrollable.
 
 Known release note: macOS package uses ad-hoc signing and is not notarized.
