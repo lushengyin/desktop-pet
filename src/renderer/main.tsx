@@ -85,8 +85,6 @@ function PetView({ snapshot, loading }: { snapshot: AppSnapshot; loading: boolea
   const manifest = pet?.manifest;
   const columns = manifest?.columns ?? 8;
   const rows = manifest?.rows ?? 9;
-  const frameWidth = manifest?.frameWidth ?? 192;
-  const frameHeight = manifest?.frameHeight ?? 208;
   const frames = mood === 'dragging'
     ? rowFrames(1, 8, columns)
     : mood === 'happy'
@@ -147,8 +145,6 @@ function PetView({ snapshot, loading }: { snapshot: AppSnapshot; loading: boolea
       <div
         className={`pet-sprite mood-${mood}`}
         style={{
-          width: frameWidth,
-          height: frameHeight,
           backgroundImage: `url("${pet.spritesheetUrl}")`,
           backgroundSize: `${columns * 100}% ${rows * 100}%`,
           backgroundPosition: `${columns === 1 ? 0 : (x / (columns - 1)) * 100}% ${rows === 1 ? 0 : (y / (rows - 1)) * 100}%`

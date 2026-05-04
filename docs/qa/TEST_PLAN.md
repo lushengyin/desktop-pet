@@ -40,5 +40,6 @@ Updated: 2026-05-04
 - `pnpm run package`: passed
 - Packaged app smoke test: passed with `LULU_SMOKE_TEST=1 release/mac-arm64/Lulu Desktop Pet.app/Contents/MacOS/Lulu Desktop Pet`
 - Feedback fix verification: passed after removing duplicate window buttons, limiting idle animation to non-empty frames, and packaging visible tray icon resource.
+- Size scaling fix verification: passed after changing desktop sprite rendering to fill the resized pet window.
 
 Known release note: macOS package uses ad-hoc signing and is not notarized.

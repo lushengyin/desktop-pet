@@ -108,6 +108,16 @@
         "build/tray.png",
         "build/icon.icns"
       ]
+    },
+    {
+      "id": "LOG-2026-05-04-007",
+      "date": "2026-05-04",
+      "type": "fix",
+      "summary": "宠物窗口尺寸随 sizeScale 改变时，渲染层仍使用固定 192x208 精灵尺寸导致缩小时裁切。已改为 pet-sprite 100% 填满窗口，保留精灵表背景定位，实现整体缩放。验证通过 typecheck、smoke、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css"
+      ]
     }
   ]
 }
