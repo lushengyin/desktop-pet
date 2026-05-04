@@ -19,6 +19,12 @@
       "date": "2026-05-04",
       "type": "planning",
       "summary": "确认完整可用产品范围、深色设置面板、噜噜素材来源、pnpm 包管理器和 GitHub 远程仓库。"
+    },
+    {
+      "id": "CHG-2026-05-04-004",
+      "date": "2026-05-04",
+      "type": "implementation",
+      "summary": "实现 Electron + React + TypeScript 桌面宠物应用：透明宠物窗口、拖动持久化、菜单栏、深色设置面板、噜噜素材、自定义宠物导入/切换、配置恢复、烟测和本地 macOS 打包。"
     }
   ]
 }

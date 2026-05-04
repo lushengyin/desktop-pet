@@ -1,6 +1,6 @@
 # Lulu Desktop Pet PRD
 
-Status: confirmed_waiting_for_development_start
+Status: development_complete_local_release_ready
 Updated: 2026-05-04
 
 ## Goal

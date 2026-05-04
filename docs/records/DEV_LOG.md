@@ -13,4 +13,7 @@ Use `project-data/dev-log.json` as the source of truth.
 - 用户确认设置面板优先深色。
 - 用户确认直接按完整可用产品开发。
 - 已设置 GitHub origin：`git@github.com:lushengyin/desktop-pet.git`。
-- 当前状态：规划已确认，等待“开始自动执行”进入实现循环。
+- 已完成完整可用产品第一版实现。
+- 验证通过：`pnpm run typecheck`、`pnpm run build`、`pnpm run smoke`、`pnpm run package`、打包产物 smoke test。
+- Electron 安装曾因默认下载源卡住，已通过 `ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ pnpm rebuild electron` 解决。
+- 当前状态：本地 release ready，macOS 包为 ad-hoc signing，未公证。

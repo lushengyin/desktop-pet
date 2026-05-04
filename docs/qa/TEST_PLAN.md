@@ -29,3 +29,15 @@ Updated: 2026-05-04
 - 设置窗口在常见宽度下保持可读。
 - 控件类型应符合预期：大小用滑块，开关项用 toggle，选项集用下拉或分段控件。
 - 深色面板需要有足够对比度，控件 hover/active/disabled 状态清晰。
+
+## Verification Results
+
+2026-05-04:
+
+- `pnpm run typecheck`: passed
+- `pnpm run build`: passed
+- `pnpm run smoke`: passed
+- `pnpm run package`: passed
+- Packaged app smoke test: passed with `LULU_SMOKE_TEST=1 release/mac-arm64/Lulu Desktop Pet.app/Contents/MacOS/Lulu Desktop Pet`
+
+Known release note: macOS package uses ad-hoc signing and is not notarized.
