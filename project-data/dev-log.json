@@ -190,6 +190,16 @@
       "changedFiles": [
         "src/main/main.ts"
       ]
+    },
+    {
+      "id": "LOG-2026-05-05-004",
+      "date": "2026-05-05",
+      "type": "fix",
+      "summary": "原 notice 在内容流内渲染，会把页面卡片向下挤，并且需要滚动到顶部才能看到。已改为 fixed toast，居中浮在窗口上方，不参与布局，1.6 秒自动消失。验证通过 typecheck、smoke、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css"
+      ]
     }
   ]
 }

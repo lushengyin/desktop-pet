@@ -34,3 +34,4 @@ Use `project-data/dev-log.json` as the source of truth.
 - 按用户要求恢复像素风：从历史提交 `3c670df` 恢复 `public/pets/lulu/pet.json` 与 `spritesheet.webp`，移除高清 `spritesheet.png`，重做图标。
 - 验证通过：`pnpm run typecheck`、`pnpm run smoke`、`pnpm run package`、打包产物 smoke test；`dist` 已恢复 WebP 资源。
 - 修复菜单栏点击行为：Tray 点击改为 `popUpContextMenu`，打开设置只由菜单项触发，避免下拉菜单闪退。
+- 修复设置提示体验：原 `notice` 在内容流内渲染，会挤压页面并要求用户滚到顶部查看；现改为 fixed toast，居中浮在窗口上方，不参与布局，1.6 秒自动消失。
