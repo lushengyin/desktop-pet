@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-05-04",
+  "status": "draft",
+  "executionMode": {
+    "name": "autonomous_until_done",
+    "description": "After the start phrase, execute tasks, verify, record bugs, fix, retest, and continue until done or blocked."
+  },
+  "attemptLimits": {
+    "maxAttemptsPerTask": 3,
+    "onExceeded": "Mark task blocked, record attempts and blockers, stop autonomous execution, and report."
+  },
+  "noConfirmationNeededFor": [
+    "Create and modify project files",
+    "Install project dependencies",
+    "Run local tests and builds",
+    "Update task, bug, changelog, and dev-log files",
+    "Fix bugs directly related to active tasks"
+  ],
+  "dialogPolicy": {
+    "applicationDialogs": {
+      "autoHandle": true
+    },
+    "systemPermissionDialogs": {
+      "autoHandle": false
+    }
+  },
+  "mustStopAndAskFor": [
+    "System security permissions",
+    "Accounts, payments, or verification codes",
+    "Destructive irreversible operations",
+    "MVP scope expansion",
+    "Task reaches max attempts"
+  ],
+  "taskLoop": [
+    "Read project-data/tasks.json",
+    "Select next unfinished task",
+    "Check attempts limit",
+    "Set status doing and increment attempts",
+    "Implement",
+    "Verify",
+    "Record and fix bugs on failure",
+    "Set status done on success",
+    "Update changelog and dev-log"
+  ],
+  "definitionOfDone": [
+    "All in-scope tasks are done",
+    "No unresolved P0/P1 bugs",
+    "Required verification passes or skips are justified",
+    "Final delivery summary is complete"
+  ],
+  "reporting": {
+    "afterEachTask": true,
+    "include": [
+      "task id and title",
+      "changed files",
+      "verification commands and results",
+      "bugs found or fixed",
+      "next task"
+    ]
+  },
+  "startPhrase": "开始自动执行",
+  "stopPhrase": "暂停自动执行"
+}

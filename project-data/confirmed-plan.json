@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-05-04",
+  "status": "confirmed_waiting_for_development_start",
+  "confirmedByUser": true,
+  "confirmations": [
+    {
+      "id": "C1",
+      "topic": "目标平台与运行时",
+      "status": "confirmed",
+      "proposal": "MVP 先做 macOS 桌面应用，默认使用 Electron + React + TypeScript。理由是透明悬浮窗、菜单栏 Tray、设置窗口和后续跨平台扩展都比较直接。",
+      "needsUserAnswer": false,
+      "confirmedAt": "2026-05-04",
+      "userAnswer": "保持 macOS + Electron + React + TypeScript 技术方案。"
+    },
+    {
+      "id": "C2",
+      "topic": "MVP 范围",
+      "status": "confirmed",
+      "proposal": "完整可用产品包含：桌面宠物显示、拖动、位置记忆、大小调整、菜单栏、设置窗口、默认“噜噜”形象与动画、自定义宠物导入/切换、配置持久化、打包交付。",
+      "needsUserAnswer": false,
+      "confirmedAt": "2026-05-04",
+      "userAnswer": "直接按照完整的可用产品进行开发。"
+    },
+    {
+      "id": "C3",
+      "topic": "设置面板视觉方向",
+      "status": "confirmed",
+      "proposal": "参考两张图做 macOS 风格设置：侧边栏分区、半透明深色面板优先、圆角分组、原生感开关/滑块/下拉、清晰图标与紧凑信息层级。",
+      "needsUserAnswer": false,
+      "confirmedAt": "2026-05-04",
+      "userAnswer": "面板主题优先考虑深色。"
+    },
+    {
+      "id": "C4",
+      "topic": "自动执行规则",
+      "status": "proposed",
+      "proposal": "只有在你明确说“开始自动执行”后才进入实现循环；普通文件修改、依赖安装、测试构建自动处理；遇到系统权限、账号付款、破坏性操作、范围扩张或单任务 3 次失败时停止询问。",
+      "needsUserAnswer": true
+    },
+    {
+      "id": "C5",
+      "topic": "宠物素材来源",
+      "status": "confirmed",
+      "proposal": "从 Codex 自定义宠物现成素材中接入“噜噜”。素材路径：/Users/lusheng/Documents/MyProjects/Codex-Pets/pets/lulu/pet.json 与 /Users/lusheng/Documents/MyProjects/Codex-Pets/pets/lulu/spritesheet.webp。",
+      "needsUserAnswer": false,
+      "confirmedAt": "2026-05-04",
+      "userAnswer": "噜噜的素材就从 Codex 的自定义宠物里拿，现在有现成的噜噜素材。"
+    },
+    {
+      "id": "C6",
+      "topic": "开发前置准备",
+      "status": "proposed",
+      "proposal": "使用本机已有包管理器和开发环境。已检测 Node v25.2.1、npm 11.6.2、pnpm 10.28.1、git 2.52.0。默认用 pnpm。",
+      "needsUserAnswer": false
+    },
+    {
+      "id": "C7",
+      "topic": "GitHub 仓库",
+      "status": "confirmed",
+      "proposal": "使用 GitHub 仓库 git@github.com:lushengyin/desktop-pet.git 作为 origin 远程仓库。",
+      "needsUserAnswer": false,
+      "confirmedAt": "2026-05-04",
+      "userAnswer": "github 仓库已创建：git@github.com:lushengyin/desktop-pet.git"
+    }
+  ]
+}

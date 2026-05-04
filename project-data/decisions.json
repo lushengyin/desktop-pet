@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-05-04",
+  "decisions": [
+    {
+      "id": "D1",
+      "date": "2026-05-04",
+      "topic": "规划流程",
+      "status": "proposed",
+      "decision": "先建立项目执行计划、PRD、任务清单、验证计划和自治规则；在用户确认关键方案并输入开始短语前不进入自动实现。"
+    },
+    {
+      "id": "D2",
+      "date": "2026-05-04",
+      "topic": "默认技术栈",
+      "status": "confirmed",
+      "decision": "MVP 默认采用 Electron + React + TypeScript，面向 macOS 优先交付。"
+    },
+    {
+      "id": "D3",
+      "date": "2026-05-04",
+      "topic": "轻量方案评估",
+      "status": "confirmed",
+      "decision": "Tauri、SwiftUI、Flutter、Qt 均已作为备选评估；当前保持 Electron + React + TypeScript，用于优先验证桌面宠物 MVP 体验，后续可在产品体验稳定后再评估轻量化迁移。"
+    },
+    {
+      "id": "D4",
+      "date": "2026-05-04",
+      "topic": "产品范围",
+      "status": "confirmed",
+      "decision": "不再按仅 MVP 预留入口开发，而是直接按完整可用产品推进，包括自定义宠物导入/切换、设置持久化、默认“噜噜”素材接入和可安装交付。"
+    },
+    {
+      "id": "D5",
+      "date": "2026-05-04",
+      "topic": "素材来源",
+      "status": "confirmed",
+      "decision": "默认宠物“噜噜”使用 Codex 自定义宠物现成素材，来源目录为 /Users/lusheng/Documents/MyProjects/Codex-Pets/pets/lulu。"
+    },
+    {
+      "id": "D6",
+      "date": "2026-05-04",
+      "topic": "设置主题",
+      "status": "confirmed",
+      "decision": "设置面板优先采用深色 macOS 风格。"
+    },
+    {
+      "id": "D7",
+      "date": "2026-05-04",
+      "topic": "仓库",
+      "status": "confirmed",
+      "decision": "项目远程仓库为 git@github.com:lushengyin/desktop-pet.git。"
+    }
+  ]
+}

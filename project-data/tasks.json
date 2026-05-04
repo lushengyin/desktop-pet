@@ -1,0 +1,383 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-05-04",
+  "statusValues": [
+    "todo",
+    "doing",
+    "blocked",
+    "review",
+    "done"
+  ],
+  "attemptPolicy": {
+    "maxAttemptsPerTask": 3,
+    "onExceeded": "blocked"
+  },
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "项目基础与技术骨架",
+      "goal": "创建可运行的桌面应用骨架，并确定窗口、进程和数据存储边界。"
+    },
+    {
+      "id": "M2",
+      "title": "桌面宠物 MVP",
+      "goal": "实现透明悬浮宠物、拖动、位置记忆、大小调整和基础动画。"
+    },
+    {
+      "id": "M3",
+      "title": "菜单栏与设置面板",
+      "goal": "实现菜单栏入口和参考图风格的可扩展设置窗口。"
+    },
+    {
+      "id": "M4",
+      "title": "自定义形象与资源管线",
+      "goal": "接入“噜噜”资源，并为未来导入自定义宠物形象预留结构。"
+    },
+    {
+      "id": "M5",
+      "title": "打包、验证与交付",
+      "goal": "完成本地验证、构建打包和交付说明。"
+    },
+    {
+      "id": "M6",
+      "title": "完整产品体验",
+      "goal": "补齐完整可用产品所需的导入、预览、异常处理、用户引导和可恢复体验。"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1.1",
+      "milestoneId": "M1",
+      "title": "确认目标平台与技术栈",
+      "status": "todo",
+      "attempts": 0,
+      "priority": "P0",
+      "output": "确认 macOS 优先、桌面运行时、前端框架和打包方式。",
+      "steps": [
+        "记录用户对平台、技术栈和 MVP 边界的确认",
+        "更新 confirmed-plan 与 decisions"
+      ],
+      "acceptanceCriteria": [
+        "目标平台与技术栈不再处于待确认状态",
+        "project.json 状态更新为 confirmed_waiting_for_development_start"
+      ],
+      "verification": [
+        "人工检查 project-data/confirmed-plan.json 与 docs/project/CONFIRMED_PLAN.md"
+      ],
+      "linkedRequirements": [
+        "R1",
+        "R6",
+        "R7",
+        "R9"
+      ]
+    },
+    {
+      "id": "T1.2",
+      "milestoneId": "M1",
+      "title": "创建 Electron + React + TypeScript 应用骨架",
+      "status": "todo",
+      "attempts": 0,
+      "priority": "P0",
+      "output": "可启动的桌面应用，包含主进程、预加载脚本、渲染进程和基础构建脚本。",
+      "steps": [
+        "初始化 package.json、tsconfig、Vite/React 结构",
+        "建立 Electron 主进程与安全 IPC 边界",
+        "配置开发启动、类型检查、打包脚本"
+      ],
+      "acceptanceCriteria": [
+        "开发命令可启动应用窗口",
+        "TypeScript 类型检查通过",
+        "基础目录结构清晰"
+      ],
+      "verification": [
+        "npm run typecheck",
+        "npm run dev 或等效启动命令"
+      ],
+      "linkedRequirements": [
+        "R9"
+      ]
+    },
+    {
+      "id": "T2.1",
+      "milestoneId": "M2",
+      "title": "实现透明悬浮宠物窗口",
+      "status": "todo",
+      "attempts": 0,
+      "priority": "P0",
+      "output": "桌面上显示无边框、透明背景、可置顶的宠物窗口。",
+      "steps": [
+        "创建宠物专用 BrowserWindow",
+        "配置透明背景、无边框、置顶、任务栏隐藏",
+        "实现基础渲染容器"
+      ],
+      "acceptanceCriteria": [
+        "宠物窗口背景透明",
+        "宠物显示在桌面上且可见",
+        "窗口不会显示普通标题栏"
+      ],
+      "verification": [
+        "本地启动后人工检查窗口外观",
+        "记录桌面截图或描述验证结果"
+      ],
+      "linkedRequirements": [
+        "R1"
+      ]
+    },
+    {
+      "id": "T2.2",
+      "milestoneId": "M2",
+      "title": "实现拖动与位置持久化",
+      "status": "todo",
+      "attempts": 0,
+      "priority": "P0",
+      "output": "用户可以拖动宠物，应用重启后恢复到上次位置。",
+      "steps": [
+        "实现鼠标拖动或窗口拖动区域",
+        "拖动结束后保存坐标",
+        "启动时读取并恢复位置"
+      ],
+      "acceptanceCriteria": [
+        "宠物可被拖到屏幕内任意位置",
+        "重启应用后位置恢复",
+        "多显示器边界至少有基础保护"
+      ],
+      "verification": [
+        "人工拖动测试",
+        "重启应用验证位置恢复"
+      ],
+      "linkedRequirements": [
+        "R2"
+      ]
+    },
+    {
+      "id": "T2.3",
+      "milestoneId": "M2",
+      "title": "实现宠物大小调整",
+      "status": "todo",
+      "attempts": 0,
+      "priority": "P0",
+      "output": "设置中可调整宠物缩放比例，并即时作用到桌面宠物。",
+      "steps": [
+        "定义 sizeScale 配置",
+        "设置面板提供滑块或步进控件",
+        "通过 IPC 更新宠物窗口尺寸和渲染缩放"
+      ],
+      "acceptanceCriteria": [
+        "缩放调整即时生效",
+        "配置重启后保留",
+        "最小/最大尺寸不会破坏布局"
+      ],
+      "verification": [
+        "人工调整多个尺寸档位",
+        "重启验证配置保留"
+      ],
+      "linkedRequirements": [
+        "R3"
+      ]
+    },
+    {
+      "id": "T2.4",
+      "milestoneId": "M2",
+      "title": "实现“噜噜”基础动画状态",
+      "status": "todo",
+      "attempts": 0,
+      "priority": "P0",
+      "output": "桌面宠物使用“噜噜”默认形象，并支持待机、被拖动、轻微互动反馈动画。",
+      "steps": [
+        "整理“噜噜”素材或临时占位资源",
+        "建立动画状态机",
+        "实现待机循环与拖动状态切换"
+      ],
+      "acceptanceCriteria": [
+        "默认宠物为“噜噜”形象",
+        "待机动画循环自然",
+        "拖动时有状态反馈"
+      ],
+      "verification": [
+        "人工观察动画循环",
+        "拖动时确认状态切换"
+      ],
+      "linkedRequirements": [
+        "R4"
+      ]
+    },
+    {
+      "id": "T3.1",
+      "milestoneId": "M3",
+      "title": "实现 macOS 菜单栏入口",
+      "status": "todo",
+      "attempts": 0,
+      "priority": "P0",
+      "output": "菜单栏图标与菜单，包含打开设置、显示/隐藏宠物、重置位置、退出。",
+      "steps": [
+        "创建 Tray 菜单栏图标",
+        "定义菜单项行为",
+        "连接菜单项与窗口/配置状态"
+      ],
+      "acceptanceCriteria": [
+        "菜单栏可见应用入口",
+        "所有 MVP 菜单项可用",
+        "退出应用行为可靠"
+      ],
+      "verification": [
+        "人工点击每个菜单项",
+        "确认显示/隐藏和重置位置生效"
+      ],
+      "linkedRequirements": [
+        "R6"
+      ]
+    },
+    {
+      "id": "T3.2",
+      "milestoneId": "M3",
+      "title": "实现设置窗口与侧边栏导航",
+      "status": "todo",
+      "attempts": 0,
+      "priority": "P0",
+      "output": "参考图片风格的设置窗口，包含分区侧边栏和主要设置内容。",
+      "steps": [
+        "创建设置 BrowserWindow",
+        "实现通用、显示、宠物、声音、集成、关于等导航项",
+        "建立设置页面布局与控件组件"
+      ],
+      "acceptanceCriteria": [
+        "视觉接近参考图的 macOS 设置风格",
+        "侧边栏导航稳定",
+        "基础设置项可读、可操作、可扩展"
+      ],
+      "verification": [
+        "人工视觉检查桌面与窗口尺寸",
+        "确认文字不重叠、不溢出"
+      ],
+      "linkedRequirements": [
+        "R7",
+        "R8"
+      ]
+    },
+    {
+      "id": "T4.1",
+      "milestoneId": "M4",
+      "title": "建立宠物资源模型与自定义导入能力",
+      "status": "todo",
+      "attempts": 0,
+      "priority": "P1",
+      "output": "宠物资源配置结构与导入流程，可表示名称、作者、缩略图、动画帧和默认缩放，并能导入/切换宠物。",
+      "steps": [
+        "定义 pet manifest 数据结构",
+        "实现默认宠物加载流程",
+        "在设置中实现宠物选择和导入入口",
+        "对导入资源做基础校验和错误提示"
+      ],
+      "acceptanceCriteria": [
+        "默认“噜噜”通过资源模型加载",
+        "未来新增宠物不需要重写核心渲染逻辑",
+        "设置界面能展示当前宠物信息",
+        "用户能导入并切换有效宠物资源"
+      ],
+      "verification": [
+        "人工检查默认资源加载",
+        "类型检查资源模型"
+      ],
+      "linkedRequirements": [
+        "R4",
+        "R5",
+        "R10",
+        "R9"
+      ]
+    },
+    {
+      "id": "T4.2",
+      "milestoneId": "M4",
+      "title": "接入 Codex 自定义宠物“噜噜”素材",
+      "status": "todo",
+      "attempts": 0,
+      "priority": "P0",
+      "output": "从现有 Codex-Pets 素材中接入“噜噜”的 pet.json 和 spritesheet.webp，作为默认宠物。",
+      "steps": [
+        "读取 /Users/lusheng/Documents/MyProjects/Codex-Pets/pets/lulu/pet.json",
+        "复制或引用 spritesheet.webp 到应用资源目录",
+        "根据 1536x1872 精灵表建立默认动画配置",
+        "在设置面板展示“噜噜”名称和预览"
+      ],
+      "acceptanceCriteria": [
+        "默认宠物显示为“噜噜”",
+        "应用构建时包含所需素材",
+        "资源路径不依赖开发机外部目录才能运行打包产物"
+      ],
+      "verification": [
+        "人工启动检查默认形象",
+        "构建后检查资源是否随应用打包"
+      ],
+      "linkedRequirements": [
+        "R4",
+        "R10",
+        "R12"
+      ]
+    },
+    {
+      "id": "T6.1",
+      "milestoneId": "M6",
+      "title": "补齐完整产品设置与恢复体验",
+      "status": "todo",
+      "attempts": 0,
+      "priority": "P0",
+      "output": "用户配置可完整保存、恢复、重置，异常状态有清晰回退。",
+      "steps": [
+        "实现配置 schema 和默认值迁移策略",
+        "补齐主题、显示状态、当前宠物、位置、大小等持久化",
+        "增加重置设置和重置宠物位置",
+        "处理素材缺失或配置损坏的回退"
+      ],
+      "acceptanceCriteria": [
+        "关键设置重启后恢复",
+        "配置损坏时应用能恢复默认值",
+        "用户能手动重置设置和位置"
+      ],
+      "verification": [
+        "手动修改设置并重启验证",
+        "模拟缺失资源或损坏配置验证回退"
+      ],
+      "linkedRequirements": [
+        "R11",
+        "R12"
+      ]
+    },
+    {
+      "id": "T5.1",
+      "milestoneId": "M5",
+      "title": "完成验证、构建和交付说明",
+      "status": "todo",
+      "attempts": 0,
+      "priority": "P1",
+      "output": "可运行、可验证、可打包的 MVP，并附运行命令与已知限制。",
+      "steps": [
+        "运行类型检查、构建和核心手动验证",
+        "记录验证结果与未解决问题",
+        "更新 changelog、dev-log、README 或交付说明"
+      ],
+      "acceptanceCriteria": [
+        "无未解决 P0/P1 bug",
+        "构建命令通过或跳过原因明确",
+        "交付说明包含运行命令、验证结果和下一阶段建议"
+      ],
+      "verification": [
+        "npm run typecheck",
+        "npm run build",
+        "人工启动应用检查核心流程"
+      ],
+      "linkedRequirements": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R6",
+        "R7",
+        "R8",
+        "R9",
+        "R10",
+        "R11",
+        "R12"
+      ]
+    }
+  ]
+}

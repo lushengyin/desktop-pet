@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-05-04",
+  "requirements": [
+    {
+      "id": "R1",
+      "type": "functional",
+      "priority": "P0",
+      "title": "桌面陪伴与悬浮显示",
+      "description": "宠物以透明、无边框、置顶但不遮挡主要操作的窗口显示在桌面上，可长期陪伴用户。"
+    },
+    {
+      "id": "R2",
+      "type": "functional",
+      "priority": "P0",
+      "title": "任意拖动位置",
+      "description": "用户可以直接拖动宠物到屏幕任意可见位置，应用应记住最近位置。"
+    },
+    {
+      "id": "R3",
+      "type": "functional",
+      "priority": "P0",
+      "title": "宠物大小调整",
+      "description": "用户可以在设置中调整宠物缩放比例，调整后桌面宠物即时生效并持久化。"
+    },
+    {
+      "id": "R4",
+      "type": "functional",
+      "priority": "P0",
+      "title": "复刻“噜噜”形象与动画",
+      "description": "MVP 阶段使用用户已有的自定义宠物“噜噜”作为默认形象，支持待机、移动/拖拽反馈等基础动画状态。"
+    },
+    {
+      "id": "R5",
+      "type": "functional",
+      "priority": "P1",
+      "title": "自定义宠物形象",
+      "description": "预留导入或选择宠物资源的能力，支持未来替换角色图片、动画帧或精灵表。"
+    },
+    {
+      "id": "R6",
+      "type": "functional",
+      "priority": "P0",
+      "title": "菜单栏功能",
+      "description": "应用在 macOS 菜单栏提供入口，可打开设置、显示/隐藏宠物、重置位置、退出应用。"
+    },
+    {
+      "id": "R7",
+      "type": "functional",
+      "priority": "P0",
+      "title": "设置界面",
+      "description": "提供可扩展设置窗口，包含通用、显示/外观、宠物、行为、声音、集成、关于等分区。"
+    },
+    {
+      "id": "R8",
+      "type": "ux",
+      "priority": "P1",
+      "title": "产品面板风格",
+      "description": "设置面板参考用户提供图片：优先深色 macOS 风格侧边栏、半透明面板、清晰图标、分组设置、滑块/开关/下拉选择等原生感控件。"
+    },
+    {
+      "id": "R9",
+      "type": "non_functional",
+      "priority": "P1",
+      "title": "可扩展架构",
+      "description": "设置、宠物资源、动画状态和菜单项应模块化，便于后续增加互动、提醒、插件或 AI 功能。"
+    },
+    {
+      "id": "R10",
+      "type": "functional",
+      "priority": "P0",
+      "title": "完整自定义宠物导入与切换",
+      "description": "产品需要支持导入、校验、预览、选择和切换自定义宠物资源，而不只是预留入口。"
+    },
+    {
+      "id": "R11",
+      "type": "functional",
+      "priority": "P0",
+      "title": "设置持久化与恢复",
+      "description": "宠物位置、大小、显示状态、当前宠物、主题等配置需要持久化并在启动时恢复。"
+    },
+    {
+      "id": "R12",
+      "type": "release",
+      "priority": "P1",
+      "title": "可安装交付",
+      "description": "应用需要具备本地构建、打包和交付说明，形成用户可运行的 macOS 桌面产品。"
+    }
+  ]
+}
