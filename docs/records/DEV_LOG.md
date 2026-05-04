@@ -24,3 +24,10 @@ Use `project-data/dev-log.json` as the source of truth.
 - 修复设置内容显示不完整问题：`hiddenInset` 标题栏会覆盖顶部内容，已增加 `.settings-content` 顶部安全间距、底部留白和滚动 padding。
 - 修复设置窗口不能拖动问题：添加 `.window-drag-region`，侧边栏和标题区域设为 `-webkit-app-region: drag`，控件设为 `no-drag`。
 - 为左侧导航添加独立滚动：`.nav-list` 使用 `overflow-y: auto`、底部留白和细滚动条，避免小窗口下底部选项不可达。
+
+## 2026-05-05
+
+- 从 `/Users/lusheng/Documents/MyProjects/Codex-Pets/pets/lulu/lulu.png` 生成透明背景 `public/pets/lulu/spritesheet.png`。
+- 更新 `pet.json` 指向 PNG，并记录 8x9、142x154 网格。
+- 删除旧 WebP 资源，重做 `build/tray.png` 和 `build/icon.icns`。
+- 验证通过：`pnpm run typecheck`、`pnpm run smoke`、`pnpm run package`、打包产物 smoke test。

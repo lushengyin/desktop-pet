@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-05-04",
+  "updatedAt": "2026-05-05",
   "entries": [
     {
       "id": "LOG-2026-05-04-001",
@@ -154,6 +154,19 @@
       "summary": "左侧导航原本随侧栏固定布局，窗口高度不足时底部选项不可达。已将 nav-list 设置为独立 overflow-y auto 区域，并添加底部留白和细滚动条。验证通过 typecheck、smoke、package、打包产物 smoke test。",
       "changedFiles": [
         "src/renderer/styles.css"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-05-001",
+      "date": "2026-05-05",
+      "type": "asset",
+      "summary": "从 /Users/lusheng/Documents/MyProjects/Codex-Pets/pets/lulu/lulu.png 生成透明背景 public/pets/lulu/spritesheet.png，更新 pet.json 指向 PNG 并记录 8x9、142x154 网格；删除旧 WebP 资源，重做 build/tray.png 和 build/icon.icns。验证通过 typecheck、smoke、package、打包产物 smoke test，dist 已包含新 PNG。",
+      "changedFiles": [
+        "public/pets/lulu/spritesheet.png",
+        "public/pets/lulu/pet.json",
+        "public/pets/lulu/spritesheet.webp",
+        "build/tray.png",
+        "build/icon.icns"
       ]
     }
   ]

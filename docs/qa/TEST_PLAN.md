@@ -45,5 +45,6 @@ Updated: 2026-05-04
 - Settings content layout fix verification: passed after increasing top and bottom content padding for the hidden titlebar window.
 - Window drag fix verification: passed after adding Electron app-region drag/no-drag zones.
 - Sidebar scroll fix verification: passed after making the left navigation list independently scrollable.
+- HD Lulu asset verification: passed after generating transparent PNG spritesheet, rebuilding icons, and confirming `dist/pets/lulu/spritesheet.png` exists.
 
 Known release note: macOS package uses ad-hoc signing and is not notarized.
