@@ -94,6 +94,20 @@
         "build/icon.icns",
         "README.md"
       ]
+    },
+    {
+      "id": "LOG-2026-05-04-006",
+      "date": "2026-05-04",
+      "type": "fix",
+      "summary": "移除自绘 traffic lights，待机动画改为 6 个有效帧，互动/拖动使用对应行有效帧；从噜噜首帧生成 tray.png 和应用 icon，并通过 extraResources 确保打包后菜单栏图标可读。验证通过 typecheck、smoke、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css",
+        "src/main/main.ts",
+        "package.json",
+        "build/tray.png",
+        "build/icon.icns"
+      ]
     }
   ]
 }

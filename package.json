@@ -43,7 +43,14 @@
     "files": [
       "dist/**",
       "dist-electron/**",
+      "build/tray.png",
       "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "build/tray.png",
+        "to": "tray.png"
+      }
     ],
     "directories": {
       "output": "release"

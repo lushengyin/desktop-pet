@@ -1,10 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
-  Bell,
   Brush,
   CircleHelp,
-  Download,
   Eye,
   FolderInput,
   Info,
@@ -12,7 +10,6 @@ import {
   Link,
   Maximize2,
   Monitor,
-  Moon,
   RotateCcw,
   Settings,
   SlidersHorizontal,
@@ -90,7 +87,11 @@ function PetView({ snapshot, loading }: { snapshot: AppSnapshot; loading: boolea
   const rows = manifest?.rows ?? 9;
   const frameWidth = manifest?.frameWidth ?? 192;
   const frameHeight = manifest?.frameHeight ?? 208;
-  const frames = mood === 'dragging' ? [8, 9, 10, 11, 12, 13, 14, 15] : mood === 'happy' ? [16, 17, 18, 19, 20, 21, 22, 23] : [0, 1, 2, 3, 4, 5, 6, 7];
+  const frames = mood === 'dragging'
+    ? rowFrames(1, 8, columns)
+    : mood === 'happy'
+      ? rowFrames(3, 4, columns)
+      : rowFrames(0, 6, columns);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -206,11 +207,6 @@ function SettingsView({
   return (
     <main className="settings-shell">
       <aside className="sidebar">
-        <div className="traffic-lights" aria-hidden="true">
-          <span className="red" />
-          <span className="yellow" />
-          <span className="green" />
-        </div>
         <div className="brand">
           <div className="brand-mark">Lu</div>
           <div>
@@ -365,6 +361,10 @@ function SettingsView({
 
 function currentPet(snapshot: AppSnapshot) {
   return snapshot.pets.find((pet) => pet.id === snapshot.settings.currentPetId) ?? snapshot.pets[0];
+}
+
+function rowFrames(row: number, count: number, columns: number) {
+  return Array.from({ length: count }, (_value, index) => row * columns + index);
 }
 
 function sectionTitle(section: SectionId) {

@@ -8,3 +8,4 @@ Use `project-data/changelog.json` as the source of truth.
 - 确认 Electron + React + TypeScript 技术方向，初始化 git 仓库并添加基础 `.gitignore`。
 - 确认完整可用产品范围、深色设置面板、噜噜素材来源、pnpm 包管理器和 GitHub 远程仓库。
 - 实现完整可用产品第一版：透明宠物窗口、拖动持久化、菜单栏、深色设置面板、噜噜素材、自定义宠物导入/切换、配置恢复、烟测和本地 macOS 打包。
+- 修复设置窗口重复 macOS 按钮、宠物动画循环空白闪烁、菜单栏图标不可见问题。

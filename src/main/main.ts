@@ -13,6 +13,9 @@ const appRoot = path.resolve(__dirname, '../..');
 const bundledPetDir = isDev
   ? path.join(appRoot, 'public/pets/lulu')
   : path.join(appRoot, 'dist/pets/lulu');
+const trayIconPath = isDev
+  ? path.join(appRoot, 'build/tray.png')
+  : path.join(process.resourcesPath, 'tray.png');
 
 const defaultSettings: AppSettings = {
   petVisible: true,
@@ -370,11 +373,8 @@ async function importPet(): Promise<ImportPetResult> {
 function updateTray() {
   if (!tray) return;
   const settings = getSettings();
-  const template = nativeImage.createFromDataURL(
-    'data:image/svg+xml;utf8,' +
-    encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="8" fill="black"/><circle cx="6" cy="8" r="1.2" fill="white"/><circle cx="12" cy="8" r="1.2" fill="white"/><path d="M5.5 12c2.2 1.5 4.8 1.5 7 0" stroke="white" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>')
-  );
-  tray.setImage(template);
+  const icon = nativeImage.createFromPath(trayIconPath).resize({ width: 18, height: 18 });
+  tray.setImage(icon.isEmpty() ? nativeImage.createFromNamedImage('NSStatusAvailable') : icon);
   tray.setToolTip('Lulu Desktop Pet');
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: '打开设置', click: createSettingsWindow },
@@ -391,7 +391,8 @@ function updateTray() {
 }
 
 function createTray() {
-  tray = new Tray(nativeImage.createEmpty());
+  const icon = nativeImage.createFromPath(trayIconPath).resize({ width: 18, height: 18 });
+  tray = new Tray(icon.isEmpty() ? nativeImage.createFromNamedImage('NSStatusAvailable') : icon);
   updateTray();
   tray.on('click', createSettingsWindow);
 }

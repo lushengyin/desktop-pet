@@ -79,7 +79,7 @@ button {
 
 .sidebar {
   border-right: 1px solid rgb(255 255 255 / 0.1);
-  padding: 42px 28px 28px;
+  padding: 72px 28px 28px;
   background: rgb(255 255 255 / 0.04);
   backdrop-filter: blur(28px);
   display: flex;
@@ -88,37 +88,11 @@ button {
   min-width: 0;
 }
 
-.traffic-lights {
-  position: absolute;
-  top: 22px;
-  left: 28px;
-  display: flex;
-  gap: 12px;
-}
-
-.traffic-lights span {
-  width: 13px;
-  height: 13px;
-  border-radius: 50%;
-}
-
-.traffic-lights .red {
-  background: #ff5f57;
-}
-
-.traffic-lights .yellow {
-  background: #ffbd2e;
-}
-
-.traffic-lights .green {
-  background: #28c840;
-}
-
 .brand {
   display: flex;
   align-items: center;
   gap: 14px;
-  margin-top: 22px;
+  margin-top: 0;
 }
 
 .brand-mark {
