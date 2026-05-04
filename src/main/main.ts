@@ -212,7 +212,8 @@ function applySettings(settings = getSettings()) {
   if (petWindow && !petWindow.isDestroyed()) {
     const size = petSize(settings.sizeScale);
     const current = petWindow.getBounds();
-    const next = boundedPosition(current.x, current.y);
+    const source = settings.petPosition ?? { x: current.x, y: current.y };
+    const next = boundedPosition(source.x, source.y);
     petWindow.setBounds({ ...next, ...size }, false);
     if (settings.petVisible) {
       petWindow.showInactive();
@@ -398,7 +399,13 @@ function createTray() {
 }
 
 function resetPetPosition() {
-  const settings = patchSettings({ petPosition: defaultPetPosition(), petVisible: true });
+  const position = boundedPosition(defaultPetPosition().x, defaultPetPosition().y);
+  const settings = sanitizeSettings({ ...getSettings(), petPosition: position, petVisible: true });
+  saveSettings(settings);
+  if (petWindow && !petWindow.isDestroyed()) {
+    petWindow.setBounds({ ...position, ...petSize(settings.sizeScale) }, false);
+    petWindow.showInactive();
+  }
   applySettings(settings);
   return settings;
 }

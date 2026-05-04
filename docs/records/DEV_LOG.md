@@ -20,3 +20,4 @@ Use `project-data/dev-log.json` as the source of truth.
 - 修复反馈问题：移除自绘 traffic lights，只保留系统标题栏按钮；待机动画只轮播 6 个有效帧，避免经过透明空帧；从噜噜首帧生成菜单栏 `tray.png` 和应用 `icon.icns`。
 - 重新验证通过：`pnpm run typecheck`、`pnpm run smoke`、`pnpm run package`、打包产物 smoke test。
 - 修复宠物大小调整裁切问题：窗口尺寸随 `sizeScale` 改变时，`.pet-sprite` 改为 100% 填满窗口，从而整体缩放而不是被裁切。
+- 修复“重置位置”无效问题：`applySettings` 现在优先使用 `settings.petPosition`，`resetPetPosition` 保存默认坐标后直接 `setBounds` 移动窗口。

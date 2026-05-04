@@ -41,5 +41,6 @@ Updated: 2026-05-04
 - Packaged app smoke test: passed with `LULU_SMOKE_TEST=1 release/mac-arm64/Lulu Desktop Pet.app/Contents/MacOS/Lulu Desktop Pet`
 - Feedback fix verification: passed after removing duplicate window buttons, limiting idle animation to non-empty frames, and packaging visible tray icon resource.
 - Size scaling fix verification: passed after changing desktop sprite rendering to fill the resized pet window.
+- Reset position fix verification: passed after changing settings application to respect saved `petPosition`.
 
 Known release note: macOS package uses ad-hoc signing and is not notarized.
