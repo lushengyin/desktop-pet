@@ -21,3 +21,4 @@ Use `project-data/dev-log.json` as the source of truth.
 - 重新验证通过：`pnpm run typecheck`、`pnpm run smoke`、`pnpm run package`、打包产物 smoke test。
 - 修复宠物大小调整裁切问题：窗口尺寸随 `sizeScale` 改变时，`.pet-sprite` 改为 100% 填满窗口，从而整体缩放而不是被裁切。
 - 修复“重置位置”无效问题：`applySettings` 现在优先使用 `settings.petPosition`，`resetPetPosition` 保存默认坐标后直接 `setBounds` 移动窗口。
+- 修复设置内容显示不完整问题：`hiddenInset` 标题栏会覆盖顶部内容，已增加 `.settings-content` 顶部安全间距、底部留白和滚动 padding。

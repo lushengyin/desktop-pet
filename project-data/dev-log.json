@@ -127,6 +127,15 @@
       "changedFiles": [
         "src/main/main.ts"
       ]
+    },
+    {
+      "id": "LOG-2026-05-04-009",
+      "date": "2026-05-04",
+      "type": "fix",
+      "summary": "设置窗口使用 hiddenInset 标题栏时，内容区顶部 padding 过小导致页面标题被系统标题栏压住，底部留白不足导致页面内容看起来不完整。已将 settings-content 顶部 padding 调整到 92px，底部 padding 调整到 72px，并设置 scroll-padding。验证通过 typecheck、smoke、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/renderer/styles.css"
+      ]
     }
   ]
 }
