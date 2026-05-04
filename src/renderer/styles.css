@@ -73,6 +73,14 @@ button {
   height: 100%;
   image-rendering: auto;
   background-repeat: no-repeat;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+}
+
+.pet-rig.has-cloud .pet-sprite {
+  width: 76%;
+  height: 76%;
 }
 
 .pet-rig.mood-dragging {
@@ -85,16 +93,21 @@ button {
 
 .pet-cloud {
   position: absolute;
-  top: -26%;
-  right: -28%;
-  max-width: 74%;
-  padding: 8px 12px;
-  border-radius: 14px;
-  font-size: 12px;
-  line-height: 1.25;
+  top: 4%;
+  right: 2%;
+  min-width: 92px;
+  max-width: 68%;
+  padding: 9px 12px;
+  border-radius: 16px;
+  font-size: 11px;
+  line-height: 1.35;
   color: #2f2f33;
   background: rgb(255 255 255 / 0.92);
   box-shadow: 0 10px 24px rgb(0 0 0 / 0.22);
+  white-space: normal;
+  word-break: break-word;
+  transform: translate(var(--cloud-offset-x, 0px), var(--cloud-offset-y, 0px));
+  transform-origin: right bottom;
   animation: cloud-float 2.2s ease-in-out infinite, cloud-fade 0.24s ease-out;
 }
 
@@ -104,8 +117,8 @@ button {
 
 .pet-cloud > i {
   position: absolute;
-  right: 30px;
-  bottom: -5px;
+  right: 18px;
+  bottom: -6px;
   width: 12px;
   height: 12px;
   background: rgb(255 255 255 / 0.92);
@@ -113,14 +126,14 @@ button {
 }
 
 @keyframes cloud-float {
-  0% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
-  100% { transform: translateY(0); }
+  0% { transform: translate(var(--cloud-offset-x, 0px), var(--cloud-offset-y, 0px)); }
+  50% { transform: translate(var(--cloud-offset-x, 0px), calc(var(--cloud-offset-y, 0px) - 5px)); }
+  100% { transform: translate(var(--cloud-offset-x, 0px), var(--cloud-offset-y, 0px)); }
 }
 
 @keyframes cloud-fade {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .settings-shell {

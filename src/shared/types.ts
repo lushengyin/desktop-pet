@@ -40,6 +40,8 @@ export type AppSettings = {
   currentAction: PetAction;
   cloudEnabled: boolean;
   cloudMessages: string[];
+  cloudOffsetX: number;
+  cloudOffsetY: number;
   theme: ThemeMode;
   launchAtLogin: boolean;
   soundEnabled: boolean;

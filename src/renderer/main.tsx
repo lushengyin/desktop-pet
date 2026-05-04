@@ -30,6 +30,8 @@ const fallbackSnapshot: AppSnapshot = {
       '人，你真棒！',
       '人，累了记得休息，我会一直陪着你'
     ],
+    cloudOffsetX: 0,
+    cloudOffsetY: 0,
     theme: 'dark',
     launchAtLogin: false,
     soundEnabled: true,
@@ -167,9 +169,16 @@ function PetView({ snapshot, loading }: { snapshot: AppSnapshot; loading: boolea
       onPointerCancel={endDrag}
       title={`${pet.displayName} - 双击互动`}
     >
-      <div className={`pet-rig mood-${mood}`}>
+      <div className={`pet-rig mood-${mood} ${snapshot.settings.cloudEnabled ? 'has-cloud' : ''}`}>
         {snapshot.settings.cloudEnabled && activeCloudMessage && (
-          <div className="pet-cloud" key={`${snapshot.settings.currentPetId}-${cloudIndex}`}>
+          <div
+            className="pet-cloud"
+            key={`${snapshot.settings.currentPetId}-${cloudIndex}`}
+            style={{
+              ['--cloud-offset-x' as string]: `${snapshot.settings.cloudOffsetX}px`,
+              ['--cloud-offset-y' as string]: `${snapshot.settings.cloudOffsetY}px`
+            }}
+          >
             <span>{activeCloudMessage}</span>
             <i />
           </div>
@@ -353,6 +362,28 @@ function SettingsView({
               <SettingRow title="云朵文案" caption={`当前 ${snapshot.settings.cloudMessages.length} 条，点击编辑`}>
                 <button className="secondary-button" onClick={() => setCloudEditorOpen(true)}>编辑文案</button>
               </SettingRow>
+              <SettingRow title="左右偏移" caption="向右是正值，用来避开脸部位置">
+                <Range
+                  value={snapshot.settings.cloudOffsetX}
+                  min={-80}
+                  max={80}
+                  step={2}
+                  suffix=""
+                  onChange={(cloudOffsetX) => updateSettings({ cloudOffsetX })}
+                  formatValue={(value) => `${value > 0 ? '+' : ''}${Math.round(value)}px`}
+                />
+              </SettingRow>
+              <SettingRow title="上下偏移" caption="向上是负值，用来抬高云朵位置">
+                <Range
+                  value={snapshot.settings.cloudOffsetY}
+                  min={-80}
+                  max={80}
+                  step={2}
+                  suffix=""
+                  onChange={(cloudOffsetY) => updateSettings({ cloudOffsetY })}
+                  formatValue={(value) => `${value > 0 ? '+' : ''}${Math.round(value)}px`}
+                />
+              </SettingRow>
             </Panel>
             <Panel title="宠物库">
               <div className="pet-grid">
@@ -530,7 +561,8 @@ function Range({
   max,
   step,
   suffix,
-  onChange
+  onChange,
+  formatValue
 }: {
   value: number;
   min: number;
@@ -538,10 +570,11 @@ function Range({
   step: number;
   suffix: string;
   onChange: (value: number) => void | Promise<void>;
+  formatValue?: (value: number) => string;
 }) {
   return (
     <div className="range-control">
-      <span>{value.toFixed(1)}{suffix}</span>
+      <span>{formatValue ? formatValue(value) : `${value.toFixed(1)}${suffix}`}</span>
       <input type="range" value={value} min={min} max={max} step={step} onChange={(event) => void onChange(Number(event.target.value))} />
     </div>
   );

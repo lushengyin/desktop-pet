@@ -244,6 +244,18 @@
         "src/renderer/main.tsx",
         "src/renderer/styles.css"
       ]
+    },
+    {
+      "id": "LOG-2026-05-05-009",
+      "date": "2026-05-05",
+      "type": "improvement",
+      "summary": "为云朵提示新增 AppSettings.cloudOffsetX/cloudOffsetY 持久化设置；宠物窗口在开启云朵时为精灵预留右上安全区，云朵改为可换行且支持偏移 CSS 变量；设置页新增左右/上下偏移滑杆。验证通过 typecheck、smoke、package。",
+      "changedFiles": [
+        "src/shared/types.ts",
+        "src/main/main.ts",
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css"
+      ]
     }
   ]
 }

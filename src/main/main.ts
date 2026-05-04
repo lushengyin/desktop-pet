@@ -27,6 +27,8 @@ const defaultSettings: AppSettings = {
     '人，你真棒！',
     '人，累了记得休息，我会一直陪着你'
   ],
+  cloudOffsetX: 0,
+  cloudOffsetY: 0,
   theme: 'dark',
   launchAtLogin: false,
   soundEnabled: true,
@@ -95,6 +97,8 @@ function sanitizeSettings(value: Partial<AppSettings>): AppSettings {
       : defaultSettings.currentAction,
     cloudEnabled: Boolean(merged.cloudEnabled),
     cloudMessages: cloudMessages.length > 0 ? cloudMessages : defaultSettings.cloudMessages,
+    cloudOffsetX: clamp(Number(merged.cloudOffsetX) || defaultSettings.cloudOffsetX, -80, 80),
+    cloudOffsetY: clamp(Number(merged.cloudOffsetY) || defaultSettings.cloudOffsetY, -80, 80),
     theme: merged.theme === 'system' ? 'system' : 'dark',
     launchAtLogin: Boolean(merged.launchAtLogin),
     soundEnabled: Boolean(merged.soundEnabled),
