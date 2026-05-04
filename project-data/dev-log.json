@@ -256,6 +256,17 @@
         "src/renderer/main.tsx",
         "src/renderer/styles.css"
       ]
+    },
+    {
+      "id": "LOG-2026-05-05-010",
+      "date": "2026-05-05",
+      "type": "fix",
+      "summary": "将宠物窗口尺寸改为精灵尺寸加云朵安全区，设置中的 petPosition 继续表示宠物精灵位置；渲染层新增 pet-anchor，相对宠物布局云朵并允许在更大透明窗口中显示，避免文字超出后被原窗口裁切。验证通过 typecheck、smoke、package。",
+      "changedFiles": [
+        "src/main/main.ts",
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css"
+      ]
     }
   ]
 }

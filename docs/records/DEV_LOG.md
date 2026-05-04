@@ -27,3 +27,4 @@ Use `project-data/dev-log.json` as the source of truth.
 - 新增 AppSettings.cloudEnabled/cloudMessages 持久化；宠物窗口渲染 pet-rig + pet-cloud，文案按 2.6 秒循环；设置页新增云朵提示开关和文案编辑器（每行一条，失焦或点击保存即生效）。验证通过 typecheck、smoke、package。
 - 云朵循环定时器依赖 cloudMessages 数组引用导致重复重置，现改为 useMemo 稳定引用后正常循环。设置页文案输入改为独立弹窗：大文本框、文案预览标签、保存/取消操作。验证通过 typecheck、smoke、package。
 - 为云朵提示新增 AppSettings.cloudOffsetX/cloudOffsetY 持久化设置；宠物窗口在开启云朵时为精灵预留右上安全区，云朵改为可换行且支持偏移 CSS 变量；设置页新增左右/上下偏移滑杆。验证通过 typecheck、smoke、package。
+- 将宠物窗口尺寸改为精灵尺寸加云朵安全区，设置中的 petPosition 继续表示宠物精灵位置；渲染层新增 pet-anchor，相对宠物布局云朵并允许在更大透明窗口中显示，避免文字超出后被原窗口裁切。验证通过 typecheck、smoke、package。

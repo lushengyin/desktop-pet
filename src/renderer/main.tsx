@@ -94,6 +94,10 @@ function PetView({ snapshot, loading }: { snapshot: AppSnapshot; loading: boolea
   const manifest = pet?.manifest;
   const columns = manifest?.columns ?? 8;
   const rows = manifest?.rows ?? 9;
+  const cloudLayout = useMemo(
+    () => petCloudLayout(snapshot.settings.sizeScale),
+    [snapshot.settings.sizeScale]
+  );
   const cloudMessages = useMemo(
     () => sanitizeCloudMessages(snapshot.settings.cloudMessages),
     [snapshot.settings.cloudMessages]
@@ -169,28 +173,36 @@ function PetView({ snapshot, loading }: { snapshot: AppSnapshot; loading: boolea
       onPointerCancel={endDrag}
       title={`${pet.displayName} - 双击互动`}
     >
-      <div className={`pet-rig mood-${mood} ${snapshot.settings.cloudEnabled ? 'has-cloud' : ''}`}>
-        {snapshot.settings.cloudEnabled && activeCloudMessage && (
+      <div
+        className={`pet-rig mood-${mood}`}
+        style={{
+          ['--cloud-gutter-top' as string]: `${cloudLayout.top}px`,
+          ['--cloud-gutter-right' as string]: `${cloudLayout.right}px`
+        }}
+      >
+        <div className="pet-anchor">
+          {snapshot.settings.cloudEnabled && activeCloudMessage && (
+            <div
+              className="pet-cloud"
+              key={`${snapshot.settings.currentPetId}-${cloudIndex}`}
+              style={{
+                ['--cloud-offset-x' as string]: `${snapshot.settings.cloudOffsetX}px`,
+                ['--cloud-offset-y' as string]: `${snapshot.settings.cloudOffsetY}px`
+              }}
+            >
+              <span>{activeCloudMessage}</span>
+              <i />
+            </div>
+          )}
           <div
-            className="pet-cloud"
-            key={`${snapshot.settings.currentPetId}-${cloudIndex}`}
+            className="pet-sprite"
             style={{
-              ['--cloud-offset-x' as string]: `${snapshot.settings.cloudOffsetX}px`,
-              ['--cloud-offset-y' as string]: `${snapshot.settings.cloudOffsetY}px`
+              backgroundImage: `url("${pet.spritesheetUrl}")`,
+              backgroundSize: `${columns * 100}% ${rows * 100}%`,
+              backgroundPosition: `${columns === 1 ? 0 : (x / (columns - 1)) * 100}% ${rows === 1 ? 0 : (y / (rows - 1)) * 100}%`
             }}
-          >
-            <span>{activeCloudMessage}</span>
-            <i />
-          </div>
-        )}
-        <div
-          className="pet-sprite"
-          style={{
-            backgroundImage: `url("${pet.spritesheetUrl}")`,
-            backgroundSize: `${columns * 100}% ${rows * 100}%`,
-            backgroundPosition: `${columns === 1 ? 0 : (x / (columns - 1)) * 100}% ${rows === 1 ? 0 : (y / (rows - 1)) * 100}%`
-          }}
-        />
+          />
+        </div>
       </div>
     </div>
   );
@@ -516,6 +528,13 @@ function sanitizeCloudMessages(values: string[]) {
   return messages.length > 0
     ? messages
     : ['人，你真棒！', '人，累了记得休息，我会一直陪着你'];
+}
+
+function petCloudLayout(scale: number) {
+  return {
+    top: Math.round(118 * scale),
+    right: Math.round(168 * scale)
+  };
 }
 
 function sectionTitle(section: SectionId) {

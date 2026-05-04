@@ -129,16 +129,34 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-function petSize(scale = getSettings().sizeScale) {
+function petSpriteSize(scale = getSettings().sizeScale) {
   return {
     width: Math.round(192 * scale),
     height: Math.round(208 * scale)
   };
 }
 
+function petCloudInsets(scale = getSettings().sizeScale) {
+  return {
+    top: Math.round(118 * scale),
+    right: Math.round(168 * scale)
+  };
+}
+
+function petWindowBoundsFromSpritePosition(x: number, y: number, scale = getSettings().sizeScale) {
+  const sprite = petSpriteSize(scale);
+  const insets = petCloudInsets(scale);
+  return {
+    x: Math.round(x),
+    y: Math.round(y - insets.top),
+    width: sprite.width + insets.right,
+    height: sprite.height + insets.top
+  };
+}
+
 function defaultPetPosition() {
   const display = screen.getPrimaryDisplay();
-  const { width, height } = petSize();
+  const { width, height } = petSpriteSize();
   return {
     x: Math.round(display.workArea.x + display.workArea.width - width - 48),
     y: Math.round(display.workArea.y + display.workArea.height - height - 56)
@@ -147,7 +165,7 @@ function defaultPetPosition() {
 
 function boundedPosition(x: number, y: number) {
   const display = screen.getDisplayNearestPoint({ x, y });
-  const { width, height } = petSize();
+  const { width, height } = petSpriteSize();
   const area = display.workArea;
   return {
     x: Math.round(clamp(x, area.x, area.x + area.width - width)),
@@ -157,14 +175,14 @@ function boundedPosition(x: number, y: number) {
 
 function createPetWindow() {
   const settings = getSettings();
-  const size = petSize(settings.sizeScale);
   const position = settings.petPosition ?? defaultPetPosition();
+  const bounds = petWindowBoundsFromSpritePosition(position.x, position.y, settings.sizeScale);
 
   petWindow = new BrowserWindow({
-    width: size.width,
-    height: size.height,
-    x: position.x,
-    y: position.y,
+    width: bounds.width,
+    height: bounds.height,
+    x: bounds.x,
+    y: bounds.y,
     frame: false,
     transparent: true,
     resizable: false,
@@ -243,11 +261,11 @@ async function loadRenderer(window: BrowserWindow, route: 'pet' | 'settings') {
 
 function applySettings(settings = getSettings()) {
   if (petWindow && !petWindow.isDestroyed()) {
-    const size = petSize(settings.sizeScale);
     const current = petWindow.getBounds();
-    const source = settings.petPosition ?? { x: current.x, y: current.y };
+    const currentInsets = petCloudInsets(settings.sizeScale);
+    const source = settings.petPosition ?? { x: current.x, y: current.y + currentInsets.top };
     const next = boundedPosition(source.x, source.y);
-    petWindow.setBounds({ ...next, ...size }, false);
+    petWindow.setBounds(petWindowBoundsFromSpritePosition(next.x, next.y, settings.sizeScale), false);
     if (settings.petVisible) {
       petWindow.showInactive();
     } else {
@@ -441,7 +459,7 @@ function resetPetPosition() {
   const settings = sanitizeSettings({ ...getSettings(), petPosition: position, petVisible: true });
   saveSettings(settings);
   if (petWindow && !petWindow.isDestroyed()) {
-    petWindow.setBounds({ ...position, ...petSize(settings.sizeScale) }, false);
+    petWindow.setBounds(petWindowBoundsFromSpritePosition(position.x, position.y, settings.sizeScale), false);
     petWindow.showInactive();
   }
   applySettings(settings);
@@ -468,13 +486,15 @@ function registerIpc() {
     dragging = false;
     if (!petWindow) return getSettings();
     const [x, y] = petWindow.getPosition();
-    return patchSettings({ petPosition: boundedPosition(x, y) });
+    const top = petCloudInsets(getSettings().sizeScale).top;
+    return patchSettings({ petPosition: boundedPosition(x, y + top) });
   });
   ipcMain.handle('pet:dragBy', (_event, delta: DragDelta) => {
     if (!petWindow || petWindow.isDestroyed()) return getSettings();
     const [x, y] = petWindow.getPosition();
-    const next = boundedPosition(x + delta.deltaX, y + delta.deltaY);
-    petWindow.setPosition(next.x, next.y, false);
+    const top = petCloudInsets(getSettings().sizeScale).top;
+    const next = boundedPosition(x + delta.deltaX, y + delta.deltaY + top);
+    petWindow.setPosition(next.x, next.y - top, false);
     const now = Date.now();
     if (dragging && now - lastDragPersist > 250) {
       lastDragPersist = now;
