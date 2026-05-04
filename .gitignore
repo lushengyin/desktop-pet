@@ -22,3 +22,7 @@ playwright-report/
 test-results/
 
 *.local
+
+# External tools / experiments
+pet-forge/
+project-data/

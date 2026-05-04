@@ -180,6 +180,12 @@ function SettingsView({
   const [notice, setNotice] = useState('');
   const pet = currentPet(snapshot);
 
+  useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(''), 1000);
+    return () => clearTimeout(timer);
+  }, [notice]);
+
   const importPet = async () => {
     const result = await window.lulu.importPet();
     setNotice(result.message);

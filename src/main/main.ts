@@ -414,8 +414,9 @@ function registerIpc() {
   ipcMain.handle('app:getSnapshot', () => getSnapshot());
   ipcMain.handle('settings:update', (_event, patch: SettingsPatch) => patchSettings(patch));
   ipcMain.handle('settings:reset', () => {
-    saveSettings(defaultSettings);
-    applySettings(defaultSettings);
+    const reset = { ...defaultSettings, petPosition: defaultPetPosition() };
+    saveSettings(reset);
+    applySettings(reset);
     return getSettings();
   });
   ipcMain.handle('pet:resetPosition', () => resetPetPosition());
