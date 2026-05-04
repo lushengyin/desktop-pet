@@ -10,9 +10,9 @@ const isSmokeTest = process.env.LULU_SMOKE_TEST === '1';
 const isDev = !app.isPackaged && !isSmokeTest;
 const rendererUrl = process.env.VITE_DEV_SERVER_URL ?? 'http://127.0.0.1:5173';
 const appRoot = path.resolve(__dirname, '../..');
-const bundledPetDir = isDev
-  ? path.join(appRoot, 'public/pets/lulu')
-  : path.join(appRoot, 'dist/pets/lulu');
+const bundledPetsRoot = isDev
+  ? path.join(appRoot, 'public/pets')
+  : path.join(appRoot, 'dist/pets');
 const trayIconPath = isDev
   ? path.join(appRoot, 'build/tray.png')
   : path.join(process.resourcesPath, 'tray.png');
@@ -256,17 +256,11 @@ function broadcastPets() {
   }
 }
 
-function bundledPet(): PetLibraryItem {
-  const manifest = readJson<PetManifest>(path.join(bundledPetDir, 'pet.json'), {
-    id: 'lulu',
-    displayName: '噜噜',
-    description: '一只圆滚滚的黄色小河马伙伴。',
-    spritesheetPath: 'spritesheet.webp'
-  });
+function normalizedPet(manifest: PetManifest, petDir: string, source: 'bundled' | 'imported'): PetLibraryItem {
   return {
     id: manifest.id,
-    displayName: manifest.displayName,
-    description: manifest.description,
+    displayName: manifest.displayName || manifest.id,
+    description: manifest.description || '',
     manifest: {
       frameWidth: 192,
       frameHeight: 208,
@@ -274,9 +268,21 @@ function bundledPet(): PetLibraryItem {
       rows: 9,
       ...manifest
     },
-    spritesheetUrl: pathToFileUrl(path.join(bundledPetDir, manifest.spritesheetPath)),
-    source: 'bundled'
+    spritesheetUrl: pathToFileUrl(path.join(petDir, manifest.spritesheetPath)),
+    source
   };
+}
+
+function bundledPets(): PetLibraryItem[] {
+  if (!fs.existsSync(bundledPetsRoot)) return [];
+  return fs.readdirSync(bundledPetsRoot, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .flatMap((entry) => {
+      const petDir = path.join(bundledPetsRoot, entry.name);
+      const manifest = readJson<PetManifest | null>(path.join(petDir, 'pet.json'), null);
+      if (!manifest?.id || !manifest.spritesheetPath) return [];
+      return [normalizedPet(manifest, petDir, 'bundled')];
+    });
 }
 
 function importedPets(): PetLibraryItem[] {
@@ -288,25 +294,22 @@ function importedPets(): PetLibraryItem[] {
       const petDir = path.join(dir, entry.name);
       const manifest = readJson<PetManifest | null>(path.join(petDir, 'pet.json'), null);
       if (!manifest?.id || !manifest.spritesheetPath) return [];
-      return [{
-        id: manifest.id,
-        displayName: manifest.displayName || manifest.id,
-        description: manifest.description || '',
-        manifest: {
-          frameWidth: 192,
-          frameHeight: 208,
-          columns: 8,
-          rows: 9,
-          ...manifest
-        },
-        spritesheetUrl: pathToFileUrl(path.join(petDir, manifest.spritesheetPath)),
-        source: 'imported' as const
-      }];
+      return [normalizedPet(manifest, petDir, 'imported')];
     });
 }
 
 function petLibrary(): PetLibraryItem[] {
-  const pets = [bundledPet(), ...importedPets()];
+  const fallbackManifest: PetManifest = {
+    id: 'lulu',
+    displayName: '噜噜',
+    description: '一只圆滚滚的黄色小河马伙伴。',
+    spritesheetPath: 'spritesheet.webp'
+  };
+  const luluFallbackDir = path.join(bundledPetsRoot, 'lulu');
+  const base = fs.existsSync(path.join(luluFallbackDir, 'pet.json'))
+    ? []
+    : [normalizedPet(fallbackManifest, luluFallbackDir, 'bundled')];
+  const pets = [...base, ...bundledPets(), ...importedPets()];
   const byId = new Map<string, PetLibraryItem>();
   for (const pet of pets) byId.set(pet.id, pet);
   return [...byId.values()];

@@ -211,6 +211,17 @@
         "src/main/main.ts",
         "src/renderer/main.tsx"
       ]
+    },
+    {
+      "id": "LOG-2026-05-05-006",
+      "date": "2026-05-05",
+      "type": "feature",
+      "summary": "接入 /Users/lusheng/.codex/pets/gugugaga 到 public/pets/gugugaga；主进程由单宠物 hardcode 改为扫描 bundled pets 目录，统一通过 normalizedPet 组装。验证通过 typecheck、smoke、package，且 dist/pets/gugugaga 存在。",
+      "changedFiles": [
+        "public/pets/gugugaga/pet.json",
+        "public/pets/gugugaga/spritesheet.webp",
+        "src/main/main.ts"
+      ]
     }
   ]
 }

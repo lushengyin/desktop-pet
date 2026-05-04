@@ -37,3 +37,5 @@ Use `project-data/dev-log.json` as the source of truth.
 - 修复设置提示体验：原 `notice` 在内容流内渲染，会挤压页面并要求用户滚到顶部查看；现改为 fixed toast，居中浮在窗口上方，不参与布局，1.6 秒自动消失。
 - 新增“当前动作”功能：`AppSettings` 增加 `currentAction` 并持久化；宠物页增加动作下拉，默认动作可实时切换和预览。
 - 双击互动和拖拽动作仍保留临时覆盖逻辑，不影响默认动作设置。
+- 接入新内置宠物：`/Users/lusheng/.codex/pets/gugugaga` 已复制到 `public/pets/gugugaga`。
+- 主进程内置宠物加载从单个 `lulu` 改为目录扫描，后续新增内置宠物无需再改代码。
