@@ -22,6 +22,8 @@ export type PetManifest = {
   frameHeight?: number;
   columns?: number;
   rows?: number;
+  actionLabels?: Partial<Record<PetAction, string>>;
+  actionFrameCounts?: Partial<Record<PetAction, number>>;
 };
 
 export type PetLibraryItem = {
@@ -56,6 +58,12 @@ export type ImportPetResult = {
   ok: boolean;
   message: string;
   pet?: PetLibraryItem;
+};
+
+export type DeletePetResult = {
+  ok: boolean;
+  message: string;
+  snapshot?: AppSnapshot;
 };
 
 export type SettingsPatch = Partial<Omit<AppSettings, 'petPosition'>> & {

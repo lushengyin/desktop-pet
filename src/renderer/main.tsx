@@ -14,6 +14,7 @@ import {
   Settings,
   SlidersHorizontal,
   Sparkles,
+  Trash2,
   Volume2
 } from 'lucide-react';
 import type { AppSettings, AppSnapshot, PetAction, PetLibraryItem, PetMood } from '../shared/types';
@@ -109,7 +110,7 @@ function PetView({ snapshot, loading }: { snapshot: AppSnapshot; loading: boolea
     : mood === 'happy'
       ? 'waving'
       : snapshot.settings.currentAction;
-  const frames = actionFrames(displayAction, columns);
+  const frames = actionFrames(displayAction, columns, manifest);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -258,6 +259,15 @@ function SettingsView({
     setSnapshot(next);
   };
 
+  const deletePet = async (item: PetLibraryItem) => {
+    if (item.source !== 'imported') return;
+    const confirmed = window.confirm(`删除自定义宠物“${item.displayName}”？`);
+    if (!confirmed) return;
+    const result = await window.lulu.deletePet(item.id);
+    setNotice(result.message);
+    setSnapshot(result.snapshot ?? await window.lulu.getSnapshot());
+  };
+
   const resetSettings = async () => {
     const settings = await window.lulu.resetSettings();
     const next = await window.lulu.getSnapshot();
@@ -368,7 +378,7 @@ function SettingsView({
                   value={snapshot.settings.currentAction}
                   onChange={(event) => updateSettings({ currentAction: event.target.value as AppSettings['currentAction'] })}
                 >
-                  {actionLabels.map((action) => (
+                  {actionOptions(pet).map((action) => (
                     <option key={action.id} value={action.id}>{action.label}</option>
                   ))}
                 </select>
@@ -410,6 +420,26 @@ function SettingsView({
                     className={`pet-card ${snapshot.settings.currentPetId === item.id ? 'selected' : ''}`}
                     onClick={() => updateSettings({ currentPetId: item.id })}
                   >
+                    {item.source === 'imported' && (
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        className="pet-delete"
+                        title="删除自定义宠物"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void deletePet(item);
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key !== 'Enter' && event.key !== ' ') return;
+                          event.preventDefault();
+                          event.stopPropagation();
+                          void deletePet(item);
+                        }}
+                      >
+                        <Trash2 size={15} />
+                      </span>
+                    )}
                     <PetPreview pet={item} />
                     <strong>{item.displayName}</strong>
                     <small>{item.source === 'bundled' ? '内置宠物' : '自定义宠物'}</small>
@@ -516,16 +546,40 @@ const actionLabels: { id: PetAction; label: string }[] = [
   { id: 'review', label: '复盘' }
 ];
 
-function actionFrames(action: PetAction, columns: number) {
-  if (action === 'running-right') return rowFrames(1, 8, columns);
-  if (action === 'running-left') return rowFrames(2, 8, columns);
-  if (action === 'waving') return rowFrames(3, 4, columns);
-  if (action === 'jumping') return rowFrames(4, 5, columns);
-  if (action === 'failed') return rowFrames(5, 8, columns);
-  if (action === 'waiting') return rowFrames(6, 6, columns);
-  if (action === 'running') return rowFrames(7, 6, columns);
-  if (action === 'review') return rowFrames(8, 6, columns);
-  return rowFrames(0, 6, columns);
+function actionOptions(pet?: PetLibraryItem) {
+  return actionLabels.map((action) => ({
+    ...action,
+    label: pet?.manifest.actionLabels?.[action.id] ?? action.label
+  }));
+}
+
+function actionFrames(action: PetAction, columns: number, manifest?: PetLibraryItem['manifest']) {
+  const defaultCounts: Record<PetAction, number> = {
+    idle: 6,
+    'running-right': 8,
+    'running-left': 8,
+    waving: 4,
+    jumping: 5,
+    failed: 8,
+    waiting: 6,
+    running: 6,
+    review: 6
+  };
+  const count = clampFrameCount(manifest?.actionFrameCounts?.[action] ?? defaultCounts[action], columns);
+  if (action === 'running-right') return rowFrames(1, count, columns);
+  if (action === 'running-left') return rowFrames(2, count, columns);
+  if (action === 'waving') return rowFrames(3, count, columns);
+  if (action === 'jumping') return rowFrames(4, count, columns);
+  if (action === 'failed') return rowFrames(5, count, columns);
+  if (action === 'waiting') return rowFrames(6, count, columns);
+  if (action === 'running') return rowFrames(7, count, columns);
+  if (action === 'review') return rowFrames(8, count, columns);
+  return rowFrames(0, count, columns);
+}
+
+function clampFrameCount(value: number, columns: number) {
+  if (!Number.isFinite(value)) return columns;
+  return Math.min(columns, Math.max(1, Math.floor(value)));
 }
 
 function sanitizeCloudMessages(values: string[]) {

@@ -2,7 +2,7 @@ import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, screen, shell, 
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { AppSettings, AppSnapshot, DragDelta, ImportPetResult, PetAction, PetLibraryItem, PetManifest, SettingsPatch } from '../shared/types.js';
+import type { AppSettings, AppSnapshot, DeletePetResult, DragDelta, ImportPetResult, PetAction, PetLibraryItem, PetManifest, SettingsPatch } from '../shared/types.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -439,6 +439,30 @@ async function importPet(): Promise<ImportPetResult> {
   }
 }
 
+function deletePet(petId: string): DeletePetResult {
+  const pet = petLibrary().find((item) => item.id === petId);
+  if (!pet) {
+    return { ok: false, message: '找不到这个宠物。' };
+  }
+  if (pet.source !== 'imported') {
+    return { ok: false, message: '内置宠物不能删除。' };
+  }
+
+  const targetDir = path.join(importedPetsDir(), pet.id);
+  if (fs.existsSync(targetDir)) {
+    fs.rmSync(targetDir, { recursive: true, force: true });
+  }
+
+  const pets = petLibrary();
+  const fallbackPet = pets.find((item) => item.source === 'bundled') ?? pets[0];
+  const settings = getSettings();
+  if (settings.currentPetId === pet.id && fallbackPet) {
+    patchSettings({ currentPetId: fallbackPet.id });
+  }
+  broadcastPets();
+  return { ok: true, message: `已删除 ${pet.displayName}。`, snapshot: getSnapshot() };
+}
+
 function updateTray() {
   if (!tray) return;
   const settings = getSettings();
@@ -517,6 +541,7 @@ function registerIpc() {
     return getSettings();
   });
   ipcMain.handle('pet:import', () => importPet());
+  ipcMain.handle('pet:delete', (_event, petId: string) => deletePet(petId));
 }
 
 app.whenReady().then(() => {

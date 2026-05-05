@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { AppSnapshot, AppSettings, DragDelta, ImportPetResult, SettingsPatch } from '../shared/types.js';
+import type { AppSnapshot, AppSettings, DeletePetResult, DragDelta, ImportPetResult, SettingsPatch } from '../shared/types.js';
 
 const api = {
   getSnapshot: (): Promise<AppSnapshot> => ipcRenderer.invoke('app:getSnapshot'),
@@ -11,6 +11,7 @@ const api = {
   beginPetDrag: (): Promise<void> => ipcRenderer.invoke('pet:beginDrag'),
   endPetDrag: (): Promise<AppSettings> => ipcRenderer.invoke('pet:endDrag'),
   importPet: (): Promise<ImportPetResult> => ipcRenderer.invoke('pet:import'),
+  deletePet: (petId: string): Promise<DeletePetResult> => ipcRenderer.invoke('pet:delete', petId),
   openSettings: (): Promise<void> => ipcRenderer.invoke('settings:open'),
   quit: (): Promise<void> => ipcRenderer.invoke('app:quit'),
   onSettingsChanged: (callback: (settings: AppSettings) => void) => {
