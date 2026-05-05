@@ -1,0 +1,60 @@
+{
+  "id": "moomoo-cow",
+  "displayName": "哞哞牛",
+  "description": "一只圆滚滚、脾气有点倔的小奶牛桌边伙伴。",
+  "spritesheetPath": "spritesheet.webp",
+  "frameWidth": 192,
+  "frameHeight": 208,
+  "columns": 12,
+  "rows": 8,
+  "actions": [
+    {
+      "id": "idle",
+      "label": "待机",
+      "row": 0,
+      "frames": 12
+    },
+    {
+      "id": "happy",
+      "label": "开心",
+      "row": 1,
+      "frames": 12
+    },
+    {
+      "id": "angry",
+      "label": "生气",
+      "row": 2,
+      "frames": 12
+    },
+    {
+      "id": "sad",
+      "label": "难过",
+      "row": 3,
+      "frames": 12
+    },
+    {
+      "id": "surprised",
+      "label": "惊讶",
+      "row": 4,
+      "frames": 12
+    },
+    {
+      "id": "walk",
+      "label": "走路",
+      "row": 5,
+      "frames": 12
+    },
+    {
+      "id": "jump",
+      "label": "跳跃",
+      "row": 6,
+      "frames": 12
+    },
+    {
+      "id": "eat-grass",
+      "label": "吃草",
+      "row": 7,
+      "frames": 12
+    }
+  ]
+}
