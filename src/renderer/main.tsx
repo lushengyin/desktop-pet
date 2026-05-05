@@ -105,11 +105,12 @@ function PetView({ snapshot, loading }: { snapshot: AppSnapshot; loading: boolea
     [snapshot.settings.cloudMessages]
   );
   const activeCloudMessage = cloudMessages[cloudIndex % cloudMessages.length] ?? '';
-  const displayAction: PetAction = mood === 'dragging'
-    ? dragAction
+  const selectedAction = selectedActionId(snapshot.settings.currentAction, pet);
+  const displayAction = mood === 'dragging'
+    ? preferredActionId(pet, [dragAction, 'urgent', selectedAction])
     : mood === 'happy'
-      ? 'waving'
-      : snapshot.settings.currentAction;
+      ? preferredActionId(pet, ['waving', 'wave', 'happy', selectedAction])
+      : selectedAction;
   const frames = actionFrames(displayAction, columns, manifest);
 
   useEffect(() => {
@@ -374,10 +375,7 @@ function SettingsView({
                 <Range value={snapshot.settings.animationSpeed} min={0.5} max={2} step={0.1} suffix="x" onChange={(animationSpeed) => updateSettings({ animationSpeed })} />
               </SettingRow>
               <SettingRow title="当前动作" caption="选择宠物在桌面的默认循环动作">
-                <select
-                  value={snapshot.settings.currentAction}
-                  onChange={(event) => updateSettings({ currentAction: event.target.value as AppSettings['currentAction'] })}
-                >
+                <select value={selectedActionId(snapshot.settings.currentAction, pet)} onChange={(event) => updateSettings({ currentAction: event.target.value })}>
                   {actionOptions(pet).map((action) => (
                     <option key={action.id} value={action.id}>{action.label}</option>
                   ))}
@@ -534,7 +532,19 @@ function rowFrames(row: number, count: number, columns: number) {
   return Array.from({ length: count }, (_value, index) => row * columns + index);
 }
 
-const actionLabels: { id: PetAction; label: string }[] = [
+const defaultActions: { id: PetAction; label: string; row: number; frames: number }[] = [
+  { id: 'idle', label: '待机', row: 0, frames: 6 },
+  { id: 'running-right', label: '向右奔跑', row: 1, frames: 8 },
+  { id: 'running-left', label: '向左奔跑', row: 2, frames: 8 },
+  { id: 'waving', label: '挥手', row: 3, frames: 4 },
+  { id: 'jumping', label: '跳跃', row: 4, frames: 5 },
+  { id: 'failed', label: '沮丧', row: 5, frames: 8 },
+  { id: 'waiting', label: '等待', row: 6, frames: 6 },
+  { id: 'running', label: '思考', row: 7, frames: 6 },
+  { id: 'review', label: '复盘', row: 8, frames: 6 }
+];
+
+const legacyActionLabels: { id: PetAction; label: string }[] = [
   { id: 'idle', label: '待机' },
   { id: 'running-right', label: '向右奔跑' },
   { id: 'running-left', label: '向左奔跑' },
@@ -546,40 +556,65 @@ const actionLabels: { id: PetAction; label: string }[] = [
   { id: 'review', label: '复盘' }
 ];
 
+function customActionDefinitions(pet?: PetLibraryItem) {
+  return pet?.manifest.actions
+    ?.filter((action) => action.id && action.label && Number.isFinite(action.row));
+}
+
 function actionOptions(pet?: PetLibraryItem) {
-  return actionLabels.map((action) => ({
-    ...action,
+  const customActions = customActionDefinitions(pet);
+  if (customActions?.length) {
+    return customActions
+      .map((action) => ({
+        id: action.id,
+        label: action.label
+      }));
+  }
+  return legacyActionLabels.map((action) => ({
+    id: action.id,
     label: pet?.manifest.actionLabels?.[action.id] ?? action.label
   }));
 }
 
-function actionFrames(action: PetAction, columns: number, manifest?: PetLibraryItem['manifest']) {
-  const defaultCounts: Record<PetAction, number> = {
-    idle: 6,
-    'running-right': 8,
-    'running-left': 8,
-    waving: 4,
-    jumping: 5,
-    failed: 8,
-    waiting: 6,
-    running: 6,
-    review: 6
-  };
-  const count = clampFrameCount(manifest?.actionFrameCounts?.[action] ?? defaultCounts[action], columns);
-  if (action === 'running-right') return rowFrames(1, count, columns);
-  if (action === 'running-left') return rowFrames(2, count, columns);
-  if (action === 'waving') return rowFrames(3, count, columns);
-  if (action === 'jumping') return rowFrames(4, count, columns);
-  if (action === 'failed') return rowFrames(5, count, columns);
-  if (action === 'waiting') return rowFrames(6, count, columns);
-  if (action === 'running') return rowFrames(7, count, columns);
-  if (action === 'review') return rowFrames(8, count, columns);
-  return rowFrames(0, count, columns);
+function selectedActionId(actionId: string, pet?: PetLibraryItem) {
+  const options = actionOptions(pet);
+  return options.some((action) => action.id === actionId)
+    ? actionId
+    : options[0]?.id ?? 'idle';
+}
+
+function preferredActionId(pet: PetLibraryItem | undefined, preferred: string[]) {
+  const options = actionOptions(pet);
+  for (const actionId of preferred) {
+    if (options.some((action) => action.id === actionId)) return actionId;
+  }
+  return options[0]?.id ?? preferred[0] ?? 'idle';
+}
+
+function actionFrames(action: string, columns: number, manifest?: PetLibraryItem['manifest']) {
+  const customActions = manifest?.actions
+    ?.filter((item) => item.id && item.label && Number.isFinite(item.row));
+  if (customActions?.length) {
+    const customAction = customActions.find((item) => item.id === action) ?? customActions[0];
+    return rowFrames(
+      clampRowIndex(customAction.row, manifest?.rows ?? 9),
+      clampFrameCount(customAction.frames ?? columns, columns),
+      columns
+    );
+  }
+  const legacyAction = defaultActions.find((item) => item.id === action) ?? defaultActions[0];
+  const count = clampFrameCount(manifest?.actionFrameCounts?.[legacyAction.id] ?? legacyAction.frames, columns);
+  return rowFrames(legacyAction.row, count, columns);
 }
 
 function clampFrameCount(value: number, columns: number) {
   if (!Number.isFinite(value)) return columns;
   return Math.min(columns, Math.max(1, Math.floor(value)));
+}
+
+function clampRowIndex(value: number, rows: number) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.min(Math.max(1, rows) - 1, Math.max(0, Math.floor(value)));
 }
 
 function sanitizeCloudMessages(values: string[]) {

@@ -12,6 +12,13 @@ export type PetAction =
   | 'running'
   | 'review';
 
+export type PetActionDefinition = {
+  id: string;
+  label: string;
+  row: number;
+  frames?: number;
+};
+
 export type PetManifest = {
   id: string;
   displayName: string;
@@ -24,6 +31,7 @@ export type PetManifest = {
   rows?: number;
   actionLabels?: Partial<Record<PetAction, string>>;
   actionFrameCounts?: Partial<Record<PetAction, number>>;
+  actions?: PetActionDefinition[];
 };
 
 export type PetLibraryItem = {
@@ -39,7 +47,7 @@ export type AppSettings = {
   petVisible: boolean;
   sizeScale: number;
   animationSpeed: number;
-  currentAction: PetAction;
+  currentAction: string;
   cloudEnabled: boolean;
   cloudMessages: string[];
   cloudOffsetX: number;
