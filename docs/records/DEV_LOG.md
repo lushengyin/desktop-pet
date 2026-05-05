@@ -36,3 +36,7 @@ Use `project-data/dev-log.json` as the source of truth.
 - 云朵气泡宽度改为随文案自适应：使用 fit-content 收缩短文本气泡宽度，并以 max-width 限制长文本自动换行。验证通过 typecheck、package。
 - 修复云朵气泡在短文案时因 right 锚定导致整体漂远的问题：将气泡定位锚点改为以宠物头部为基准的 left 锚定，并同步调整箭头定位。验证通过 typecheck、package。
 - 修复从 Mission Control/切换器返回时设置窗口闪现后无法聚焦的问题：打开设置窗口时短暂提升 always-on-top 级别以可靠 bring-to-front，随后自动撤销。验证通过 typecheck、package。
+- 应用侧新增 PetManifest.actionLabels 支持，设置页动作下拉可按当前宠物显示自定义动作文案，并将宠物预览底色改为浅色。验证通过 typecheck、package。
+- 新增自定义宠物管理能力：宠物库中自定义宠物显示删除按钮，删除前二次确认；主进程新增 pet:delete IPC，仅允许删除 imported 宠物，删除当前宠物时自动切回可用内置宠物。验证通过 typecheck、package。
+- 新增 PetManifest.actionFrameCounts 支持，自定义宠物可声明每个动作实际播放帧数，未声明时继续使用内置默认帧数。验证通过 typecheck、package。
+- 桌面宠物窗口新增透明区域鼠标穿透：主进程轮询鼠标位置，鼠标在宠物精灵区域内可点击/拖动，窗口扩展出的云朵和空白安全区可穿透到下一层。验证通过 typecheck、package。

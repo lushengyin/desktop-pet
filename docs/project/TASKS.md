@@ -36,3 +36,7 @@ Use `project-data/tasks.json` as the source of truth.
 - T6.7 云朵气泡宽度自适应：done
 - T6.8 短文案气泡锚点修复：done
 - T6.9 设置窗口聚焦修复：done
+- T6.10 自定义宠物动作文案适配：done
+- T6.11 自定义宠物删除管理：done
+- T6.12 自定义宠物动作帧数配置：done
+- T6.13 桌面宠物透明区域鼠标穿透：done

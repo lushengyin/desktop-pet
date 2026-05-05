@@ -595,6 +595,126 @@
       "linkedRequirements": [
         "R7"
       ]
+    },
+    {
+      "id": "T6.10",
+      "milestoneId": "M6",
+      "title": "自定义宠物动作文案适配",
+      "status": "done",
+      "attempts": 1,
+      "priority": "P1",
+      "output": "支持通过宠物 manifest 为动作下拉提供自定义文案，并优化透明宠物预览底色。",
+      "steps": [
+        "在 PetManifest 中支持 actionLabels",
+        "设置页动作下拉按当前宠物 actionLabels 显示自定义动作名",
+        "将宠物预览底色改为浅色以提升透明资源可读性"
+      ],
+      "acceptanceCriteria": [
+        "提供 actionLabels 的宠物显示自定义动作名",
+        "未提供 actionLabels 的宠物继续显示默认动作名",
+        "透明宠物预览在深色设置面板中保持清晰"
+      ],
+      "verification": [
+        "pnpm run typecheck",
+        "pnpm run package"
+      ],
+      "linkedRequirements": [
+        "R5",
+        "R7",
+        "R8",
+        "R10"
+      ]
+    },
+    {
+      "id": "T6.11",
+      "milestoneId": "M6",
+      "title": "自定义宠物删除管理",
+      "status": "done",
+      "attempts": 1,
+      "priority": "P1",
+      "output": "宠物库支持删除导入的自定义宠物，内置宠物不可删除；删除当前宠物时自动切回可用内置宠物。",
+      "steps": [
+        "新增 pet:delete IPC 与 preload API",
+        "限制只能删除 imported 宠物目录",
+        "删除当前宠物时自动回退到可用内置宠物",
+        "在宠物库自定义宠物卡片上显示删除按钮并二次确认"
+      ],
+      "acceptanceCriteria": [
+        "自定义宠物卡片可删除",
+        "内置宠物不显示删除入口且不能通过 IPC 删除",
+        "删除当前宠物后应用不会停留在无效 currentPetId",
+        "删除后宠物库自动刷新"
+      ],
+      "verification": [
+        "pnpm run typecheck",
+        "pnpm run package"
+      ],
+      "linkedRequirements": [
+        "R5",
+        "R7",
+        "R10",
+        "R11"
+      ]
+    },
+    {
+      "id": "T6.12",
+      "milestoneId": "M6",
+      "title": "自定义宠物动作帧数配置",
+      "status": "done",
+      "attempts": 1,
+      "priority": "P1",
+      "output": "宠物 manifest 可声明每个动作实际播放帧数，未声明时继续使用应用内置默认帧数。",
+      "steps": [
+        "在 PetManifest 中新增 actionFrameCounts",
+        "播放动作时优先读取当前宠物 manifest 中的帧数配置",
+        "对帧数做 1 到 columns 范围内的保护"
+      ],
+      "acceptanceCriteria": [
+        "自定义宠物可为任意动作声明实际播放帧数",
+        "未声明帧数的宠物保持原有默认播放行为",
+        "帧数配置不会越过精灵表列数"
+      ],
+      "verification": [
+        "pnpm run typecheck",
+        "pnpm run package"
+      ],
+      "linkedRequirements": [
+        "R5",
+        "R7",
+        "R8",
+        "R10"
+      ]
+    },
+    {
+      "id": "T6.13",
+      "milestoneId": "M6",
+      "title": "桌面宠物透明区域鼠标穿透",
+      "status": "done",
+      "attempts": 2,
+      "priority": "P1",
+      "output": "宠物透明窗口扩展出的空白安全区不再拦截下层点击，鼠标在宠物精灵区域内仍可点击和拖动。",
+      "steps": [
+        "主进程为宠物窗口启用 setIgnoreMouseEvents 穿透切换",
+        "轮询系统鼠标位置并判断是否位于宠物精灵显示区域",
+        "拖动过程中强制关闭穿透以保持拖动稳定",
+        "离开宠物精灵区域后恢复透明区域穿透"
+      ],
+      "acceptanceCriteria": [
+        "宠物窗口云朵和透明安全区不会拦截下层点击",
+        "鼠标位于宠物形象上时仍可拖动宠物",
+        "拖动过程中不会因穿透切换中断"
+      ],
+      "verification": [
+        "pnpm run typecheck",
+        "pnpm run package",
+        "用户本地测试通过"
+      ],
+      "linkedRequirements": [
+        "R1",
+        "R2",
+        "R7",
+        "R8"
+      ]
     }
   ]
 }

@@ -52,6 +52,8 @@ let settingsWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let dragging = false;
 let lastDragPersist = 0;
+let petMousePassthrough = false;
+let petCursorProbeTimer: NodeJS.Timeout | null = null;
 
 function settingsPath() {
   return path.join(app.getPath('userData'), 'settings.json');
@@ -203,6 +205,8 @@ function createPetWindow() {
 
   petWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   petWindow.setAlwaysOnTop(true, 'floating');
+  setPetMousePassthrough(true);
+  startPetCursorProbe();
 
   void loadRenderer(petWindow, 'pet');
 
@@ -213,8 +217,58 @@ function createPetWindow() {
   });
 
   petWindow.on('closed', () => {
+    stopPetCursorProbe();
     petWindow = null;
+    petMousePassthrough = false;
   });
+}
+
+function setPetMousePassthrough(passthrough: boolean) {
+  if (!petWindow || petWindow.isDestroyed()) return;
+  const next = dragging ? false : passthrough;
+  if (petMousePassthrough === next) return;
+  petMousePassthrough = next;
+  petWindow.setIgnoreMouseEvents(next, { forward: true });
+}
+
+function startPetCursorProbe() {
+  if (petCursorProbeTimer) return;
+  petCursorProbeTimer = setInterval(() => {
+    if (!petWindow || petWindow.isDestroyed()) {
+      stopPetCursorProbe();
+      return;
+    }
+    if (dragging) {
+      setPetMousePassthrough(false);
+      return;
+    }
+    const cursor = screen.getCursorScreenPoint();
+    const bounds = petWindow.getBounds();
+    const inside = cursor.x >= bounds.x &&
+      cursor.x <= bounds.x + bounds.width &&
+      cursor.y >= bounds.y &&
+      cursor.y <= bounds.y + bounds.height;
+    if (!inside) {
+      setPetMousePassthrough(true);
+      return;
+    }
+    const settings = getSettings();
+    const sprite = petSpriteSize(settings.sizeScale);
+    const insets = petCloudInsets(settings.sizeScale);
+    const localX = cursor.x - bounds.x;
+    const localY = cursor.y - bounds.y;
+    const overSprite = localX >= 0 &&
+      localX <= sprite.width &&
+      localY >= insets.top &&
+      localY <= insets.top + sprite.height;
+    setPetMousePassthrough(!overSprite);
+  }, 40);
+}
+
+function stopPetCursorProbe() {
+  if (!petCursorProbeTimer) return;
+  clearInterval(petCursorProbeTimer);
+  petCursorProbeTimer = null;
 }
 
 function createSettingsWindow() {
@@ -519,6 +573,7 @@ function registerIpc() {
   ipcMain.handle('app:quit', () => app.quit());
   ipcMain.handle('pet:beginDrag', () => {
     dragging = true;
+    setPetMousePassthrough(false);
   });
   ipcMain.handle('pet:endDrag', () => {
     dragging = false;
