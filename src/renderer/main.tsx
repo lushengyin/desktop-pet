@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
+  ArrowLeft,
   Brush,
   Brain,
+  ChevronDown,
   CircleHelp,
   Eraser,
   Eye,
@@ -474,9 +476,11 @@ function SettingsView({
   const [testingProvider, setTestingProvider] = useState(false);
   const [personaDraft, setPersonaDraft] = useState(fallbackSnapshot.companion.currentPetPersona);
   const [modelDraft, setModelDraft] = useState<CompanionModelConfig | null>(null);
+  const [expandedModelConfigId, setExpandedModelConfigId] = useState<string | null>(fallbackSnapshot.settings.companion.activeModelConfigId);
   const [settingsChatText, setSettingsChatText] = useState('');
   const [settingsChatBusy, setSettingsChatBusy] = useState(false);
   const [petTab, setPetTab] = useState<'appearance' | 'interaction' | 'companion'>('appearance');
+  const [companionPage, setCompanionPage] = useState<'overview' | 'models'>('overview');
   const [petQuery, setPetQuery] = useState('');
   const [petSourceFilter, setPetSourceFilter] = useState<'all' | 'bundled' | 'imported'>('all');
   const pet = currentPet(snapshot);
@@ -550,8 +554,15 @@ function SettingsView({
   const activeModelConfig = snapshot.settings.companion.modelConfigs.find((config) => (
     config.id === snapshot.settings.companion.activeModelConfigId
   )) ?? snapshot.settings.companion.modelConfigs[0];
-  const activeModelConfigured = Boolean(modelDraft && modelDraft.provider !== 'disabled' && modelDraft.apiBaseUrl && modelDraft.apiKey && modelDraft.model);
+  const modelConfigured = (config: CompanionModelConfig) => (
+    config.provider !== 'disabled' && Boolean(config.apiBaseUrl && config.apiKey && config.model)
+  );
+  const activeModelConfigured = Boolean(activeModelConfig && modelConfigured(activeModelConfig));
   const modelDraftDirty = Boolean(activeModelConfig && modelDraft && JSON.stringify(activeModelConfig) !== JSON.stringify(modelDraft));
+  const modelProviderLabel = (provider: CompanionSettings['provider']) => companionProviderPresets[provider]?.label ?? provider;
+  const activeModelVersion = activeModelConfig
+    ? [activeModelConfig.id, activeModelConfig.name, activeModelConfig.provider, activeModelConfig.apiBaseUrl, activeModelConfig.apiKey, activeModelConfig.model].join('\u0000')
+    : '';
 
   const updateActiveModelConfig = (patch: Partial<CompanionModelConfig>) => {
     const currentConfig = activeModelConfig;
@@ -580,7 +591,15 @@ function SettingsView({
 
   useEffect(() => {
     setModelDraft(activeModelConfig ? { ...activeModelConfig } : null);
-  }, [activeModelConfig?.id]);
+  }, [activeModelVersion, companionPage]);
+
+  useEffect(() => {
+    const activeId = snapshot.settings.companion.activeModelConfigId;
+    const hasExpanded = snapshot.settings.companion.modelConfigs.some((config) => config.id === expandedModelConfigId);
+    if (expandedModelConfigId !== null && !hasExpanded && activeId) {
+      setExpandedModelConfigId(activeId);
+    }
+  }, [expandedModelConfigId, snapshot.settings.companion.activeModelConfigId, snapshot.settings.companion.modelConfigs]);
 
   const saveModelConfig = async () => {
     if (!modelDraft) return;
@@ -595,7 +614,22 @@ function SettingsView({
     await testCompanionProvider();
   };
 
-  const selectModelConfig = (activeModelConfigId: string) => updateCompanion({ activeModelConfigId });
+  const selectModelConfig = (activeModelConfigId: string) => {
+    if (activeModelConfigId === snapshot.settings.companion.activeModelConfigId) return Promise.resolve();
+    if (modelDraftDirty && !window.confirm('当前模型配置还没有保存，切换后会放弃未保存内容。继续切换？')) {
+      return Promise.resolve();
+    }
+    return updateCompanion({ activeModelConfigId });
+  };
+
+  const toggleModelConfig = async (config: CompanionModelConfig) => {
+    if (expandedModelConfigId === config.id) {
+      setExpandedModelConfigId(null);
+      return;
+    }
+    setExpandedModelConfigId(config.id);
+    await selectModelConfig(config.id);
+  };
 
   const addModelConfig = () => {
     const id = `model-${Date.now().toString(36)}`;
@@ -613,14 +647,16 @@ function SettingsView({
     });
   };
 
-  const deleteActiveModelConfig = () => {
-    if (!activeModelConfig || snapshot.settings.companion.modelConfigs.length <= 1) return;
-    const confirmed = window.confirm(`删除模型配置“${activeModelConfig.name}”？`);
+  const deleteModelConfig = (config: CompanionModelConfig) => {
+    if (snapshot.settings.companion.modelConfigs.length <= 1) return;
+    const confirmed = window.confirm(`删除模型配置“${config.name}”？`);
     if (!confirmed) return;
-    const modelConfigs = snapshot.settings.companion.modelConfigs.filter((config) => config.id !== activeModelConfig.id);
+    const modelConfigs = snapshot.settings.companion.modelConfigs.filter((item) => item.id !== config.id);
     void updateCompanion({
       modelConfigs,
-      activeModelConfigId: modelConfigs[0]?.id
+      activeModelConfigId: snapshot.settings.companion.activeModelConfigId === config.id
+        ? modelConfigs[0]?.id
+        : snapshot.settings.companion.activeModelConfigId
     });
   };
 
@@ -663,7 +699,7 @@ function SettingsView({
       <div className="window-drag-region" aria-hidden="true" />
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-mark">Lu</div>
+          <PetAvatarBadge pet={pet} />
           <div>
             <h1>桌边小伴</h1>
             <p>Desk Buddy</p>
@@ -818,7 +854,79 @@ function SettingsView({
                 </div>
               </Panel>
             )}
-            {petTab === 'companion' && (
+            {petTab === 'companion' && companionPage === 'models' && (
+              <>
+                <div className="settings-subpage-header model-page-header">
+                  <button className="secondary-button" onClick={() => setCompanionPage('overview')}><ArrowLeft size={16} />返回</button>
+                  <div>
+                    <strong>模型配置</strong>
+                    <span>当前模型用于聊天、主动说话和连接测试。</span>
+                  </div>
+                  <button className="primary-button" onClick={() => void addModelConfig()}>新增模型</button>
+                </div>
+                <section className="model-manager-panel">
+                  <div className="model-config-list">
+                    {snapshot.settings.companion.modelConfigs.map((config) => {
+                      const isActiveConfig = config.id === snapshot.settings.companion.activeModelConfigId;
+                      const isExpanded = expandedModelConfigId === config.id;
+                      const displayConfig = isActiveConfig && modelDraft ? modelDraft : config;
+                      const configured = modelConfigured(displayConfig);
+                      return (
+                        <div key={config.id} className={`model-config-item ${isActiveConfig ? 'active' : ''} ${isExpanded ? 'expanded' : ''}`}>
+                          <button className="model-config-summary" onClick={() => void toggleModelConfig(config)}>
+                            <span className="model-config-main">
+                              <strong>{displayConfig.name || '未命名模型'}</strong>
+                              <small>{modelProviderLabel(displayConfig.provider)} · {displayConfig.model || '未填写模型'}</small>
+                            </span>
+                            <span className={configured ? 'status-ok' : 'status-muted'}>{configured ? '已配置' : '本地回退'}</span>
+                            {isActiveConfig && <span className="model-active-pill">当前</span>}
+                            <ChevronDown className="model-config-chevron" size={16} />
+                          </button>
+                          {isExpanded && isActiveConfig && modelDraft && (
+                            <div className="model-config-details">
+                              <div className="model-config-form">
+                                <label className="model-field">
+                                  <span>配置名称</span>
+                                  <input className="text-input" value={modelDraft.name} onChange={(event) => updateModelDraft({ name: event.target.value })} placeholder="例如 DeepSeek 日常聊天" />
+                                </label>
+                                <label className="model-field">
+                                  <span>服务类型</span>
+                                  <select value={modelDraft.provider} onChange={(event) => updateCompanionProvider(event.target.value as CompanionSettings['provider'])}>
+                                    {Object.entries(companionProviderPresets).map(([provider, preset]) => <option key={provider} value={provider}>{preset.label}</option>)}
+                                  </select>
+                                </label>
+                                <label className="model-field wide">
+                                  <span>API Base URL</span>
+                                  <input className="text-input" value={modelDraft.apiBaseUrl} onChange={(event) => updateModelDraft({ apiBaseUrl: event.target.value })} placeholder="https://api.deepseek.com" />
+                                </label>
+                                <label className="model-field">
+                                  <span>模型</span>
+                                  <input className="text-input" value={modelDraft.model} onChange={(event) => updateModelDraft({ model: event.target.value })} placeholder="deepseek-chat / glm-4-flash" />
+                                </label>
+                                <label className="model-field">
+                                  <span>API Key</span>
+                                  <input className="text-input" type="password" value={modelDraft.apiKey} placeholder="只保存在本机" onChange={(event) => updateModelDraft({ apiKey: event.target.value })} />
+                                </label>
+                              </div>
+                              {snapshot.companion.status.lastError && <p className="error-text">{snapshot.companion.status.lastError}</p>}
+                              <div className="model-config-footer">
+                                  <div className="model-config-footer-actions">
+                                    <button className="secondary-button" disabled={!modelDraftDirty} onClick={() => void saveModelConfig()}>保存配置</button>
+                                    <button className="primary-button" disabled={testingProvider || modelDraft.provider === 'disabled'} onClick={() => void testSelectedModelProvider()}><Zap size={16} />{testingProvider ? '测试中' : '测试连接'}</button>
+                                    <button className="secondary-button" onClick={() => setExpandedModelConfigId(null)}>收起</button>
+                                    <button className="secondary-button danger" disabled={snapshot.settings.companion.modelConfigs.length <= 1} onClick={() => deleteModelConfig(config)}><Trash2 size={15} />删除</button>
+                                  </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              </>
+            )}
+            {petTab === 'companion' && companionPage === 'overview' && (
               <>
                 <Panel title="智能陪伴">
                   <div className="settings-grid two">
@@ -865,66 +973,22 @@ function SettingsView({
                   </div>
                   <div className="panel-actions"><button className="primary-button" onClick={() => void savePersona()}>保存设定</button></div>
                 </Panel>
-                <Panel title="记忆与模型">
-                  <div className="companion-columns">
-                    <div className="subsection-card">
-                      <div className="subsection-head"><strong>角色记忆</strong><Switch checked={snapshot.settings.companion.memoryEnabled} onChange={(memoryEnabled) => updateCompanion({ memoryEnabled })} /></div>
-                      <p>{memorySummaryText(snapshot)}</p>
-                      <div className="memory-facts compact">{snapshot.companion.currentPetMemory.facts.slice(0, 5).map((fact) => <span key={fact}>{fact}</span>)}</div>
-                      <button className="secondary-button" onClick={clearCompanionMemory}><Eraser size={16} />清除记忆</button>
+                <Panel title="角色记忆">
+                  <div className="subsection-card memory-module-card">
+                    <div className="subsection-head"><strong>长期记忆</strong><Switch checked={snapshot.settings.companion.memoryEnabled} onChange={(memoryEnabled) => updateCompanion({ memoryEnabled })} /></div>
+                    <p>{memorySummaryText(snapshot)}</p>
+                    <div className="memory-facts compact">{snapshot.companion.currentPetMemory.facts.slice(0, 5).map((fact) => <span key={fact}>{fact}</span>)}</div>
+                    <button className="secondary-button" onClick={clearCompanionMemory}><Eraser size={16} />清除记忆</button>
+                  </div>
+                </Panel>
+                <Panel title="模型服务">
+                  <div className="model-service-entry">
+                    <div>
+                      <strong>{activeModelConfig?.name ?? '默认模型'}</strong>
+                      <span>{activeModelConfig ? `${modelProviderLabel(activeModelConfig.provider)} · ${activeModelConfig.model || '未填写模型'}` : '暂无模型配置'}</span>
                     </div>
-                    <div className="subsection-card model-config-card">
-                      <div className="subsection-head">
-                        <strong>模型服务</strong>
-                        <span className={activeModelConfigured ? 'status-ok' : 'status-muted'}>{activeModelConfigured ? '已配置' : '本地回退'}</span>
-                      </div>
-                      <div className="model-config-toolbar">
-                        <label className="model-field compact">
-                          <span>当前配置</span>
-                          <select value={snapshot.settings.companion.activeModelConfigId} onChange={(event) => void selectModelConfig(event.target.value)}>
-                            {snapshot.settings.companion.modelConfigs.map((config) => <option key={config.id} value={config.id}>{config.name}</option>)}
-                          </select>
-                        </label>
-                        <div className="model-config-actions">
-                          <button className="secondary-button" onClick={() => void addModelConfig()}>新增</button>
-                          <button className="secondary-button" disabled={snapshot.settings.companion.modelConfigs.length <= 1} onClick={deleteActiveModelConfig}>删除</button>
-                        </div>
-                      </div>
-                      {modelDraft && (
-                        <div className="model-config-form">
-                          <label className="model-field">
-                            <span>配置名称</span>
-                            <input className="text-input" value={modelDraft.name} onChange={(event) => updateModelDraft({ name: event.target.value })} placeholder="例如 DeepSeek 日常聊天" />
-                          </label>
-                          <label className="model-field">
-                            <span>服务类型</span>
-                            <select value={modelDraft.provider} onChange={(event) => updateCompanionProvider(event.target.value as CompanionSettings['provider'])}>
-                              {Object.entries(companionProviderPresets).map(([provider, preset]) => <option key={provider} value={provider}>{preset.label}</option>)}
-                            </select>
-                          </label>
-                          <label className="model-field wide">
-                            <span>API Base URL</span>
-                            <input className="text-input" value={modelDraft.apiBaseUrl} onChange={(event) => updateModelDraft({ apiBaseUrl: event.target.value })} placeholder="https://api.deepseek.com" />
-                          </label>
-                          <label className="model-field">
-                            <span>模型</span>
-                            <input className="text-input" value={modelDraft.model} onChange={(event) => updateModelDraft({ model: event.target.value })} placeholder="deepseek-chat / glm-4-flash" />
-                          </label>
-                          <label className="model-field">
-                            <span>API Key</span>
-                            <input className="text-input" type="password" value={modelDraft.apiKey} placeholder="只保存在本机" onChange={(event) => updateModelDraft({ apiKey: event.target.value })} />
-                          </label>
-                        </div>
-                      )}
-                      {snapshot.companion.status.lastError && <p className="error-text">{snapshot.companion.status.lastError}</p>}
-                      <div className="model-config-footer">
-                        <span>{modelDraft?.provider === 'disabled' ? '选择 DeepSeek、GLM 或兼容服务后即可填写大模型配置。' : '当前配置会用于聊天、主动说话和连接测试。'}</span>
-                        <div className="model-config-footer-actions">
-                          <button className="secondary-button" disabled={!modelDraft || !modelDraftDirty} onClick={() => void saveModelConfig()}>保存配置</button>
-                          <button className="primary-button" disabled={testingProvider || !modelDraft || modelDraft.provider === 'disabled'} onClick={() => void testSelectedModelProvider()}><Zap size={16} />{testingProvider ? '测试中' : '测试连接'}</button>
-                        </div>
-                      </div>
-                    </div>
+                    <span className={modelConfigured(activeModelConfig ?? fallbackSnapshot.settings.companion.modelConfigs[0]) ? 'status-ok' : 'status-muted'}>{modelConfigured(activeModelConfig ?? fallbackSnapshot.settings.companion.modelConfigs[0]) ? '已配置' : '本地回退'}</span>
+                    <button className="primary-button" onClick={() => setCompanionPage('models')}>管理模型</button>
                   </div>
                 </Panel>
               </>
@@ -1240,6 +1304,20 @@ function PetPreview({ pet }: { pet?: PetLibraryItem }) {
         backgroundSize: `${(pet.manifest.columns ?? 8) * 100}% ${(pet.manifest.rows ?? 9) * 100}%`
       }}
     />
+  );
+}
+
+function PetAvatarBadge({ pet }: { pet?: PetLibraryItem }) {
+  if (!pet) return <div className="brand-mark">Lu</div>;
+  return (
+    <div className="brand-mark brand-pet-avatar" aria-label={`当前宠物：${pet.displayName}`}>
+      <span
+        style={{
+          backgroundImage: `url("${pet.spritesheetUrl}")`,
+          backgroundSize: `${(pet.manifest.columns ?? 8) * 100}% ${(pet.manifest.rows ?? 9) * 100}%`
+        }}
+      />
+    </div>
   );
 }
 

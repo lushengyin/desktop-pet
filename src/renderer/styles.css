@@ -26,6 +26,21 @@ input {
   -webkit-app-region: no-drag;
 }
 
+button:focus,
+select:focus,
+input:focus,
+textarea:focus {
+  outline: none;
+}
+
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  border-color: rgb(112 214 189 / 0.64);
+  box-shadow: 0 0 0 3px rgb(112 214 189 / 0.16);
+}
+
 input {
   color: #f6f6f8;
 }
@@ -323,8 +338,8 @@ button {
 }
 
 .brand-mark {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 60px;
   border-radius: 14px;
   display: grid;
   place-items: center;
@@ -332,6 +347,26 @@ button {
   color: #141414;
   background: linear-gradient(135deg, #ffe27a, #ff9f4d);
   box-shadow: 0 16px 32px rgb(0 0 0 / 0.24);
+}
+
+.brand-pet-avatar {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 50% 14%, rgb(255 255 255 / 0.94), rgb(244 241 233 / 0.9) 58%, rgb(232 227 216 / 0.88));
+  border: 1px solid rgb(255 255 255 / 0.22);
+  box-shadow:
+    0 18px 34px rgb(0 0 0 / 0.28),
+    inset 0 1px 0 rgb(255 255 255 / 0.56);
+}
+
+.brand-pet-avatar span {
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  filter: drop-shadow(0 6px 9px rgb(0 0 0 / 0.18));
 }
 
 .brand h1,
@@ -714,6 +749,30 @@ select {
   padding-top: 8px;
 }
 
+.settings-subpage-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin: -4px 0 16px;
+}
+
+.settings-subpage-header > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.settings-subpage-header strong {
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.settings-subpage-header span {
+  color: #b9bac2;
+  font-size: 13px;
+}
+
 .subsection-card {
   display: flex;
   flex-direction: column;
@@ -751,36 +810,161 @@ select {
 }
 
 .model-config-card {
-  gap: 14px;
+  display: grid;
+  gap: 12px;
 }
 
-.model-config-toolbar {
+.model-manager-panel {
+  padding: 4px 0 0;
+}
+
+.memory-module-card {
+  gap: 12px;
+}
+
+.memory-module-card .secondary-button {
+  align-self: flex-start;
+}
+
+.model-service-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 86px;
+  padding: 16px;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 0.07);
+  border: 1px solid rgb(255 255 255 / 0.1);
+}
+
+.model-service-entry > div {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.model-service-entry strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+}
+
+.model-service-entry span {
+  color: #b9bac2;
+  font-size: 13px;
+}
+
+.model-service-entry .status-ok {
+  color: #9cf1cb;
+}
+
+.model-config-topline {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
-  align-items: end;
+  gap: 12px;
+  align-items: center;
 }
 
-.model-config-actions {
-  display: flex;
+.model-config-topline > span {
+  color: #b9bac2;
+  font-size: 12px;
+}
+
+.model-config-list {
+  display: grid;
   gap: 8px;
 }
 
-.model-config-actions .secondary-button {
-  min-width: 64px;
-  padding: 0 12px;
+.model-config-item {
+  overflow: hidden;
+  border-radius: 11px;
+  background: rgb(255 255 255 / 0.045);
+  border: 1px solid rgb(255 255 255 / 0.085);
+  transition: border-color 140ms ease, background 140ms ease;
+}
+
+.model-config-item.active {
+  border-color: rgb(112 214 189 / 0.26);
+  background: rgb(112 214 189 / 0.055);
+}
+
+.model-config-summary {
+  width: 100%;
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  color: #f6f6f8;
+  text-align: left;
+  background: transparent;
+}
+
+.model-config-main {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.model-config-main strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+.model-config-main small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #b6b7bd;
+  font-size: 12px;
+}
+
+.model-active-pill {
+  border-radius: 999px;
+  padding: 3px 8px;
+  color: #d7fff0;
+  background: rgb(112 214 189 / 0.18);
+  border: 1px solid rgb(112 214 189 / 0.28);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.model-config-chevron {
+  color: #c9c9cf;
+  transition: transform 140ms ease;
+}
+
+.model-config-item.expanded .model-config-chevron {
+  transform: rotate(180deg);
+}
+
+.model-config-details {
+  display: grid;
+  gap: 14px;
+  padding: 14px 12px 12px;
+  border-top: 1px solid rgb(255 255 255 / 0.08);
 }
 
 .model-config-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  padding-top: 2px;
+  gap: 12px 14px;
 }
 
 .model-field {
   display: grid;
   gap: 6px;
+  min-width: 0;
+}
+
+.model-field .text-input,
+.model-field select {
+  width: 100%;
   min-width: 0;
 }
 
@@ -799,11 +983,8 @@ select {
 }
 
 .model-config-footer {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
-  align-items: center;
-  padding-top: 2px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .model-config-footer-actions {
@@ -814,7 +995,12 @@ select {
 
 .model-config-footer .primary-button,
 .model-config-footer .secondary-button {
-  min-width: 138px;
+  min-width: 116px;
+}
+
+.secondary-button.danger {
+  color: #ffd5d5;
+  background: rgb(255 95 95 / 0.14);
 }
 
 .switch {
@@ -1367,14 +1553,25 @@ input[type="range"] {
   .settings-grid.three,
   .persona-grid,
   .companion-columns,
-  .model-config-toolbar,
+  .model-config-topline,
+  .model-service-entry,
   .model-config-form,
   .model-config-footer {
     grid-template-columns: 1fr;
   }
 
-  .model-config-actions {
-    justify-content: flex-start;
+  .settings-subpage-header {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+  }
+
+  .model-config-summary {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+
+  .model-config-summary .status-ok,
+  .model-config-summary .status-muted {
+    display: none;
   }
 
   .model-config-footer-actions {

@@ -72,3 +72,10 @@ Use `project-data/dev-log.json` as the source of truth.
 - 新增菜单栏图标开关：AppSettings 增加 showMenuBarIcon，关闭时主进程销毁 Tray，重新打开时恢复 Tray；同时增加宠物右键打开设置、Dock 激活打开设置和应用菜单 Cmd+, 设置入口，避免菜单栏空间不足时失去管理入口。验证通过 typecheck、package、打包产物 smoke test。
 - 重排模型服务配置卡片：将配置选择、新增/删除操作和当前配置详情拆成独立区域，为服务类型、Base URL、模型名和 API Key 增加明确标签，并在未选择模型服务时给出本地回退说明。验证通过 typecheck、package、打包产物 smoke test。
 - 模型服务配置改为本地草稿编辑加手动保存：输入不会立即写入设置，点击保存配置后才同步；测试连接会先保存未提交改动。应用菜单补回标准编辑角色，恢复 Cmd+V 粘贴 API Key。验证通过 typecheck、package、打包产物 smoke test。
+- 优化模型服务布局：移除拥挤的顶部下拉和裸表单，改为模型配置卡片列表；每个模型独立显示名称、服务类型、模型名、配置状态和当前标识，点击卡片展开详情后编辑、保存、测试或删除。验证通过 typecheck、package、打包产物 smoke test。
+- 调整陪伴页信息架构：角色记忆和模型服务拆成两个独立 Panel，陪伴主页面中的模型服务只显示当前模型摘要和管理入口，点击后进入二级模型配置页面，模型卡片详情不再压在记忆模块下方。验证通过 typecheck、package、打包产物 smoke test。
+- 精简模型管理页视觉层级：移除二级页里的外层 Panel、重复标题和长说明，将页面调整为返回/标题/新增按钮组成的轻量头部，下方直接呈现模型卡片列表，展开区只保留必要字段和保存、测试、删除操作。验证通过 typecheck、package、打包产物 smoke test。
+- 修复模型管理页状态和布局问题：进入模型配置页时按当前真实模型刷新本地草稿，避免外部显示 DeepSeek 但详情仍显示未配置；模型字段输入和下拉强制占满自身列宽，避免重叠；详情操作区新增收起按钮。验证通过 typecheck、package、打包产物 smoke test。
+- 修复模型配置详情无法收起：展开项兜底 effect 之前会把 null 误判为缺失项并重新展开当前模型，现在仅在已展开的模型被删除时才回退到当前模型。验证通过 typecheck、package、打包产物 smoke test。
+- 统一表单控件焦点样式：移除按钮、下拉、输入框和文本域聚焦时的系统黄色描边，改为与深色界面更协调的青绿色弱焦点环。验证通过 typecheck。
+- 设置页左上角品牌头像改为 PetAvatarBadge，读取当前宠物 spritesheet 首帧并沿用宠物页缩略图比例；移除固定 Lu 占位和额外装饰点。验证通过 typecheck、package、打包产物 smoke test。
