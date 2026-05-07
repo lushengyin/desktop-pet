@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-05-05",
+  "updatedAt": "2026-05-06",
   "statusValues": [
     "todo",
     "doing",
@@ -42,6 +42,11 @@
       "id": "M6",
       "title": "完整产品体验",
       "goal": "补齐完整可用产品所需的导入、预览、异常处理、用户引导和可恢复体验。"
+    },
+    {
+      "id": "M7",
+      "title": "智能陪伴与角色记忆",
+      "goal": "在保留现有手动气泡能力的基础上，新增角色主动对话、聊天入口、长期记忆、独立角色记忆空间和用户可控的智能陪伴配置。"
     }
   ],
   "tasks": [
@@ -714,6 +719,258 @@
         "R2",
         "R7",
         "R8"
+      ]
+    },
+    {
+      "id": "T7.1",
+      "milestoneId": "M7",
+      "title": "设计智能陪伴数据模型与设置结构",
+      "status": "done",
+      "attempts": 1,
+      "priority": "P0",
+      "output": "定义主动回复、聊天会话、角色记忆、角色人格配置和模型/API 配置的数据结构，并接入现有 settings/pet manifest 边界。",
+      "steps": [
+        "梳理现有 AppSettings、PetManifest、IPC 和本地配置存储结构",
+        "设计 companionSettings、chatSessions、petMemories、characterProfile 等数据模型",
+        "确定每个角色独立记忆空间的 key 规则，优先使用 currentPetId 或 manifest id",
+        "定义迁移和默认值，保证旧用户配置可正常读取"
+      ],
+      "acceptanceCriteria": [
+        "主动回复、聊天、记忆、模型配置都有明确类型定义",
+        "每个角色的记忆可以按 petId 独立定位",
+        "关闭智能陪伴时不影响现有手动气泡功能",
+        "旧配置文件缺少新字段时可以安全回退默认值"
+      ],
+      "verification": [
+        "人工检查类型和配置默认值设计",
+        "pnpm run typecheck"
+      ],
+      "linkedRequirements": [
+        "R13",
+        "R14",
+        "R15",
+        "R16",
+        "R17",
+        "R18"
+      ]
+    },
+    {
+      "id": "T7.2",
+      "milestoneId": "M7",
+      "title": "新增智能陪伴设置模块",
+      "status": "done",
+      "attempts": 1,
+      "priority": "P0",
+      "output": "设置窗口新增专门的智能陪伴/聊天模块，用于配置主动回复、回复频率、气泡模式、记忆开关、记忆管理和模型/API 参数。",
+      "steps": [
+        "在设置侧边栏新增智能陪伴入口",
+        "提供主动回复开关、回复频率和触发策略设置",
+        "提供手动气泡、AI 主动回复、混合模式的选择",
+        "提供记忆开关、查看摘要、清除当前角色记忆等控制",
+        "提供模型/API 配置区域和未配置时的引导/禁用状态"
+      ],
+      "acceptanceCriteria": [
+        "用户可以明确选择继续使用现有自定义气泡或启用智能陪伴",
+        "未配置模型/API 时不会误触发联网请求",
+        "记忆相关操作有清晰确认和状态反馈",
+        "设置项重启后保留"
+      ],
+      "verification": [
+        "pnpm run typecheck",
+        "人工检查设置窗口布局和控件状态"
+      ],
+      "linkedRequirements": [
+        "R16",
+        "R17",
+        "R18"
+      ]
+    },
+    {
+      "id": "T7.3",
+      "milestoneId": "M7",
+      "title": "实现桌面快捷聊天框",
+      "status": "done",
+      "attempts": 1,
+      "priority": "P0",
+      "output": "桌面宠物在开启主动回复后提供快捷聊天入口，用户可以直接向当前角色发送消息并看到回复。",
+      "steps": [
+        "设计宠物窗口内的快捷聊天触发方式，避免影响拖动和鼠标穿透",
+        "实现输入框、发送、加载、错误和收起状态",
+        "将用户消息与当前 petId 绑定写入会话记录",
+        "将角色回复展示到聊天框，并可同步到桌面气泡"
+      ],
+      "acceptanceCriteria": [
+        "开启主动回复后可以从桌面角色快速打开聊天框",
+        "输入、发送、等待、失败、关闭状态完整",
+        "聊天框不会破坏宠物拖动和透明区域穿透",
+        "当前角色切换后聊天目标随角色切换"
+      ],
+      "verification": [
+        "pnpm run typecheck",
+        "pnpm run package",
+        "人工测试桌面聊天和拖动互不冲突"
+      ],
+      "linkedRequirements": [
+        "R13",
+        "R15",
+        "R17"
+      ]
+    },
+    {
+      "id": "T7.4",
+      "milestoneId": "M7",
+      "title": "接入角色回复服务抽象",
+      "status": "done",
+      "attempts": 1,
+      "priority": "P0",
+      "output": "建立可替换的角色回复服务层，负责组织角色设定、短期上下文、长期记忆和用户输入，并返回可展示回复。",
+      "steps": [
+        "定义 companion reply provider 接口和错误类型",
+        "实现未配置模型时的本地占位/禁用回退",
+        "实现模型/API 配置读取、请求、超时和失败处理",
+        "把角色 manifest 信息、当前动作和记忆摘要纳入 prompt/context",
+        "确保主进程或安全边界中处理 API Key，不暴露到不必要的渲染层"
+      ],
+      "acceptanceCriteria": [
+        "回复服务与 UI 解耦，后续可替换不同模型供应商",
+        "网络/API 失败不会导致应用崩溃",
+        "未开启主动回复时不会调用回复服务",
+        "敏感配置不被写入日志或提交到仓库"
+      ],
+      "verification": [
+        "pnpm run typecheck",
+        "模拟未配置、失败和成功路径"
+      ],
+      "linkedRequirements": [
+        "R13",
+        "R17",
+        "R18"
+      ]
+    },
+    {
+      "id": "T7.5",
+      "milestoneId": "M7",
+      "title": "实现角色长期记忆存储与更新",
+      "status": "done",
+      "attempts": 1,
+      "priority": "P0",
+      "output": "为每个角色维护独立的长期记忆摘要与关键事实，支持追加、更新、读取、查看和清除。",
+      "steps": [
+        "设计本地记忆文件或配置存储位置，按 petId 隔离",
+        "记录用户偏好、称呼、重要事件、互动习惯和关系状态等记忆类型",
+        "实现聊天后记忆提取/摘要更新流程",
+        "设置页提供查看当前角色记忆摘要和清除入口",
+        "为导入宠物、删除宠物和切换宠物定义记忆保留策略"
+      ],
+      "acceptanceCriteria": [
+        "每个角色只能读取自己的记忆",
+        "互动后可逐步沉淀可读的长期记忆摘要",
+        "用户可以清除当前角色记忆",
+        "删除自定义宠物时不会误删其他角色记忆"
+      ],
+      "verification": [
+        "pnpm run typecheck",
+        "人工测试两个角色的记忆隔离",
+        "人工测试清除记忆后不再进入回复上下文"
+      ],
+      "linkedRequirements": [
+        "R14",
+        "R15",
+        "R18"
+      ]
+    },
+    {
+      "id": "T7.6",
+      "milestoneId": "M7",
+      "title": "实现角色主动说话调度",
+      "status": "done",
+      "attempts": 1,
+      "priority": "P1",
+      "output": "在用户开启主动回复后，角色可以按可控频率、空闲状态和最近互动上下文主动生成并展示一句话。",
+      "steps": [
+        "设计主动触发条件：空闲时间、最近互动、冷却时间、勿扰状态和用户配置频率",
+        "实现调度器，避免过于频繁打扰用户",
+        "主动回复内容写入当前角色会话和记忆候选",
+        "把主动回复展示到桌面气泡，并可从气泡继续打开聊天框"
+      ],
+      "acceptanceCriteria": [
+        "主动说话只在用户开启后发生",
+        "回复频率受设置控制且有冷却保护",
+        "主动气泡不会与手动气泡循环产生混乱",
+        "用户可以随时关闭主动回复回到手动气泡模式"
+      ],
+      "verification": [
+        "pnpm run typecheck",
+        "人工测试主动回复开关、频率和关闭回退"
+      ],
+      "linkedRequirements": [
+        "R13",
+        "R16",
+        "R17",
+        "R18"
+      ]
+    },
+    {
+      "id": "T7.7",
+      "milestoneId": "M7",
+      "title": "兼容现有自定义气泡展示策略",
+      "status": "done",
+      "attempts": 1,
+      "priority": "P0",
+      "output": "保留现有 cloudEnabled/cloudMessages 功能，并新增手动气泡、AI 气泡、混合模式下的展示优先级和回退逻辑。",
+      "steps": [
+        "梳理现有云朵气泡定时播放逻辑",
+        "定义 bubbleMode：manual、companion、mixed",
+        "实现不同模式下的文案来源、优先级和失败回退",
+        "确保现有用户已配置的 cloudMessages 不丢失、不被 AI 覆盖"
+      ],
+      "acceptanceCriteria": [
+        "只使用手动气泡时行为与当前版本一致",
+        "AI 失败时可以回退到手动气泡或静默",
+        "混合模式下用户能理解当前显示来源",
+        "现有 cloudMessages 配置迁移后仍可编辑"
+      ],
+      "verification": [
+        "pnpm run typecheck",
+        "人工测试三种气泡模式"
+      ],
+      "linkedRequirements": [
+        "R16",
+        "R17"
+      ]
+    },
+    {
+      "id": "T7.8",
+      "milestoneId": "M7",
+      "title": "智能陪伴端到端验证与打包",
+      "status": "done",
+      "attempts": 1,
+      "priority": "P1",
+      "output": "完成智能陪伴功能的类型检查、打包、桌面交互验证和隐私/失败场景检查，并生成可测试 .app。",
+      "steps": [
+        "运行类型检查和最小构建验证",
+        "打包 .app 供用户测试",
+        "验证未配置模型、关闭主动回复、手动气泡、AI 聊天、角色切换、记忆隔离等场景",
+        "更新开发日志、变更记录和测试结果"
+      ],
+      "acceptanceCriteria": [
+        "pnpm run typecheck 通过",
+        "pnpm run package 通过并产出 .app",
+        "核心手动测试路径通过",
+        "文档记录实现范围、已知限制和验证结果"
+      ],
+      "verification": [
+        "pnpm run typecheck",
+        "pnpm run package",
+        "手动端到端测试"
+      ],
+      "linkedRequirements": [
+        "R13",
+        "R14",
+        "R15",
+        "R16",
+        "R17",
+        "R18"
       ]
     }
   ]

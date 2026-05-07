@@ -10,6 +10,7 @@ Use `project-data/tasks.json` as the source of truth.
 - M4: 自定义形象与资源管线
 - M5: 打包、验证与交付
 - M6: 完整产品体验
+- M7: 智能陪伴与角色记忆
 
 ## P0 Tasks
 
@@ -40,3 +41,14 @@ Use `project-data/tasks.json` as the source of truth.
 - T6.11 自定义宠物删除管理：done
 - T6.12 自定义宠物动作帧数配置：done
 - T6.13 桌面宠物透明区域鼠标穿透：done
+
+## M7 智能陪伴与角色记忆
+
+- T7.1 设计智能陪伴数据模型与设置结构：done
+- T7.2 新增智能陪伴设置模块：done
+- T7.3 实现桌面快捷聊天框：done
+- T7.4 接入角色回复服务抽象：done
+- T7.5 实现角色长期记忆存储与更新：done
+- T7.6 实现角色主动说话调度：done
+- T7.7 兼容现有自定义气泡展示策略：done
+- T7.8 智能陪伴端到端验证与打包：done

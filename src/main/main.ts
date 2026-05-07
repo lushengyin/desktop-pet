@@ -2,7 +2,28 @@ import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, screen, shell, 
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { AppSettings, AppSnapshot, DeletePetResult, DragDelta, ImportPetResult, PetLibraryItem, PetManifest, SettingsPatch } from '../shared/types.js';
+import type {
+  AppSettings,
+  AppSnapshot,
+  CompanionClearMemoryResult,
+  CompanionMemory,
+  CompanionMessage,
+  CompanionModelConfig,
+  CompanionPersona,
+  CompanionProvider,
+  CompanionReplyResult,
+  CompanionSettings,
+  CompanionSnapshot,
+  CompanionTestProviderResult,
+  CompanionUpdatePersonaResult,
+  DeletePetResult,
+  DragDelta,
+  ImportPetResult,
+  PetInteractiveRegion,
+  PetLibraryItem,
+  PetManifest,
+  SettingsPatch
+} from '../shared/types.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,6 +37,8 @@ const bundledPetsRoot = isDev
 const trayIconPath = isDev
   ? path.join(appRoot, 'build/tray.png')
   : path.join(process.resourcesPath, 'tray.png');
+const maxCompanionMessagesPerPet = 40;
+const defaultModelConfigId = 'default-model';
 
 const defaultSettings: AppSettings = {
   petVisible: true,
@@ -31,8 +54,31 @@ const defaultSettings: AppSettings = {
   cloudOffsetY: 0,
   theme: 'dark',
   launchAtLogin: false,
+  showMenuBarIcon: true,
   soundEnabled: true,
   currentPetId: 'lulu',
+  companion: {
+    enabled: false,
+    memoryEnabled: true,
+    proactiveEnabled: false,
+    bubbleMode: 'manual',
+    replyFrequencyMinutes: 20,
+    activeModelConfigId: defaultModelConfigId,
+    modelConfigs: [
+      {
+        id: defaultModelConfigId,
+        name: '默认模型',
+        provider: 'disabled',
+        apiBaseUrl: 'https://api.openai.com/v1',
+        apiKey: '',
+        model: 'gpt-4.1-mini'
+      }
+    ],
+    provider: 'disabled',
+    apiBaseUrl: 'https://api.openai.com/v1',
+    apiKey: '',
+    model: 'gpt-4.1-mini'
+  },
   petPosition: null
 };
 let petWindow: BrowserWindow | null = null;
@@ -42,6 +88,8 @@ let dragging = false;
 let lastDragPersist = 0;
 let petMousePassthrough = false;
 let petCursorProbeTimer: NodeJS.Timeout | null = null;
+let petInteractiveRegions: PetInteractiveRegion[] = [];
+let lastCompanionError: string | null = null;
 
 function settingsPath() {
   return path.join(app.getPath('userData'), 'settings.json');
@@ -49,6 +97,14 @@ function settingsPath() {
 
 function importedPetsDir() {
   return path.join(app.getPath('userData'), 'pets');
+}
+
+function companionDir() {
+  return path.join(app.getPath('userData'), 'companion');
+}
+
+function petCompanionDir(petId: string) {
+  return path.join(companionDir(), sanitizeFileName(petId));
 }
 
 function ensureDir(dir: string) {
@@ -66,6 +122,74 @@ function readJson<T>(file: string, fallback: T): T {
 function writeJson(file: string, value: unknown) {
   ensureDir(path.dirname(file));
   fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+function sanitizeCompanionSettings(value: Partial<CompanionSettings> | undefined): CompanionSettings {
+  const merged = { ...defaultSettings.companion, ...(value ?? {}) };
+  const bubbleModes = new Set(['manual', 'companion', 'mixed']);
+  const providers = new Set(['disabled', 'openai-compatible', 'deepseek', 'glm']);
+  const legacyConfig: CompanionModelConfig = {
+    id: defaultModelConfigId,
+    name: '默认模型',
+    provider: providers.has(merged.provider) ? merged.provider : 'disabled',
+    apiBaseUrl: typeof merged.apiBaseUrl === 'string' && merged.apiBaseUrl.trim()
+      ? merged.apiBaseUrl.trim().replace(/\/+$/, '')
+      : defaultSettings.companion.apiBaseUrl,
+    apiKey: typeof merged.apiKey === 'string' ? merged.apiKey.trim() : '',
+    model: typeof merged.model === 'string' && merged.model.trim()
+      ? merged.model.trim()
+      : defaultSettings.companion.model
+  };
+  const rawConfigs = Array.isArray(merged.modelConfigs) && merged.modelConfigs.length > 0
+    ? merged.modelConfigs
+    : [legacyConfig];
+  const modelConfigs = rawConfigs
+    .map((config, index) => sanitizeModelConfig(config, index))
+    .filter((config): config is CompanionModelConfig => Boolean(config))
+    .slice(0, 12);
+  const safeConfigs = modelConfigs.length > 0 ? modelConfigs : [legacyConfig];
+  const activeModelConfigId = typeof merged.activeModelConfigId === 'string' &&
+    safeConfigs.some((config) => config.id === merged.activeModelConfigId)
+    ? merged.activeModelConfigId
+    : safeConfigs[0].id;
+  const activeConfig = safeConfigs.find((config) => config.id === activeModelConfigId) ?? safeConfigs[0];
+  return {
+    enabled: Boolean(merged.enabled),
+    memoryEnabled: Boolean(merged.memoryEnabled),
+    proactiveEnabled: Boolean(merged.proactiveEnabled),
+    bubbleMode: bubbleModes.has(merged.bubbleMode) ? merged.bubbleMode : defaultSettings.companion.bubbleMode,
+    replyFrequencyMinutes: clamp(Number(merged.replyFrequencyMinutes) || defaultSettings.companion.replyFrequencyMinutes, 0.001, 240),
+    activeModelConfigId,
+    modelConfigs: safeConfigs,
+    provider: activeConfig.provider,
+    apiBaseUrl: activeConfig.apiBaseUrl,
+    apiKey: activeConfig.apiKey,
+    model: activeConfig.model
+  };
+}
+
+function sanitizeModelConfig(value: Partial<CompanionModelConfig>, index: number): CompanionModelConfig | null {
+  const providers = new Set(['disabled', 'openai-compatible', 'deepseek', 'glm']);
+  const provider = typeof value.provider === 'string' && providers.has(value.provider)
+    ? value.provider as CompanionProvider
+    : 'disabled';
+  const id = typeof value.id === 'string' && value.id.trim()
+    ? sanitizeFileName(value.id.trim()).slice(0, 60)
+    : `model-${index + 1}`;
+  return {
+    id,
+    name: typeof value.name === 'string' && value.name.trim()
+      ? value.name.trim().slice(0, 40)
+      : `模型 ${index + 1}`,
+    provider,
+    apiBaseUrl: typeof value.apiBaseUrl === 'string' && value.apiBaseUrl.trim()
+      ? value.apiBaseUrl.trim().replace(/\/+$/, '')
+      : defaultSettings.companion.apiBaseUrl,
+    apiKey: typeof value.apiKey === 'string' ? value.apiKey.trim() : '',
+    model: typeof value.model === 'string' && value.model.trim()
+      ? value.model.trim().slice(0, 80)
+      : defaultSettings.companion.model
+  };
 }
 
 function sanitizeSettings(value: Partial<AppSettings>): AppSettings {
@@ -91,8 +215,10 @@ function sanitizeSettings(value: Partial<AppSettings>): AppSettings {
     cloudOffsetY: clamp(Number(merged.cloudOffsetY) || defaultSettings.cloudOffsetY, -80, 80),
     theme: merged.theme === 'system' ? 'system' : 'dark',
     launchAtLogin: Boolean(merged.launchAtLogin),
+    showMenuBarIcon: merged.showMenuBarIcon !== false,
     soundEnabled: Boolean(merged.soundEnabled),
     currentPetId: typeof merged.currentPetId === 'string' ? merged.currentPetId : 'lulu',
+    companion: sanitizeCompanionSettings(merged.companion),
     petPosition: merged.petPosition && Number.isFinite(merged.petPosition.x) && Number.isFinite(merged.petPosition.y)
       ? { x: merged.petPosition.x, y: merged.petPosition.y }
       : null
@@ -117,6 +243,10 @@ function patchSettings(patch: SettingsPatch): AppSettings {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
+}
+
+function sanitizeFileName(value: string) {
+  return value.replace(/[^a-zA-Z0-9._-]/g, '_') || 'pet';
 }
 
 function petSpriteSize(scale = getSettings().sizeScale) {
@@ -249,8 +379,32 @@ function startPetCursorProbe() {
       localX <= sprite.width &&
       localY >= insets.top &&
       localY <= insets.top + sprite.height;
-    setPetMousePassthrough(!overSprite);
+    const overInteractiveRegion = petInteractiveRegions.some((region) => isPointInInteractiveRegion(localX, localY, region));
+    setPetMousePassthrough(!overSprite && !overInteractiveRegion);
   }, 40);
+}
+
+function isPointInInteractiveRegion(x: number, y: number, region: PetInteractiveRegion) {
+  if (
+    x < region.x ||
+    x > region.x + region.width ||
+    y < region.y ||
+    y > region.y + region.height
+  ) {
+    return false;
+  }
+  const radius = Math.min(region.radius ?? 0, region.width / 2, region.height / 2);
+  if (radius <= 0) return true;
+  const innerLeft = region.x + radius;
+  const innerRight = region.x + region.width - radius;
+  const innerTop = region.y + radius;
+  const innerBottom = region.y + region.height - radius;
+  if ((x >= innerLeft && x <= innerRight) || (y >= innerTop && y <= innerBottom)) {
+    return true;
+  }
+  const cornerX = x < innerLeft ? innerLeft : innerRight;
+  const cornerY = y < innerTop ? innerTop : innerBottom;
+  return (x - cornerX) ** 2 + (y - cornerY) ** 2 <= radius ** 2;
 }
 
 function stopPetCursorProbe() {
@@ -331,7 +485,7 @@ function applySettings(settings = getSettings()) {
   if (!isSmokeTest) {
     app.setLoginItemSettings({ openAtLogin: settings.launchAtLogin });
   }
-  updateTray();
+  syncTray(settings);
 }
 
 function broadcastSettings() {
@@ -345,6 +499,13 @@ function broadcastPets() {
   const snapshot = getSnapshot();
   for (const window of BrowserWindow.getAllWindows()) {
     window.webContents.send('pets:changed', snapshot);
+  }
+}
+
+function broadcastCompanion() {
+  const companion = getCompanionSnapshot(getSettings().currentPetId);
+  for (const window of BrowserWindow.getAllWindows()) {
+    window.webContents.send('companion:changed', companion);
   }
 }
 
@@ -407,6 +568,119 @@ function petLibrary(): PetLibraryItem[] {
   return [...byId.values()];
 }
 
+function defaultMemory(petId: string): CompanionMemory {
+  return {
+    petId,
+    summary: '',
+    facts: [],
+    updatedAt: null
+  };
+}
+
+function memoryPath(petId: string) {
+  return path.join(petCompanionDir(petId), 'memory.json');
+}
+
+function messagesPath(petId: string) {
+  return path.join(petCompanionDir(petId), 'messages.json');
+}
+
+function personaPath(petId: string) {
+  return path.join(petCompanionDir(petId), 'persona.json');
+}
+
+function getMemory(petId: string): CompanionMemory {
+  const memory = readJson<CompanionMemory>(memoryPath(petId), defaultMemory(petId));
+  return {
+    petId,
+    summary: typeof memory.summary === 'string' ? memory.summary : '',
+    facts: Array.isArray(memory.facts)
+      ? memory.facts.filter((item): item is string => typeof item === 'string').slice(0, 20)
+      : [],
+    updatedAt: typeof memory.updatedAt === 'string' ? memory.updatedAt : null
+  };
+}
+
+function saveMemory(memory: CompanionMemory) {
+  writeJson(memoryPath(memory.petId), memory);
+}
+
+function defaultPersona(petId: string, pet?: PetLibraryItem): CompanionPersona {
+  return {
+    petId,
+    nickname: pet?.displayName ?? '',
+    personality: '温柔、亲近、有一点撒娇，会主动关心用户。',
+    tone: '自然、简短、像熟悉的人在身边说话。',
+    relationship: '长期陪伴用户的桌面伙伴，关系亲密但不过度冒犯。',
+    speakingStyle: '每次回复尽量短，适合显示在桌面气泡里，不说教。',
+    updatedAt: null
+  };
+}
+
+function sanitizePersona(value: Partial<CompanionPersona>, petId: string, pet?: PetLibraryItem): CompanionPersona {
+  const fallback = defaultPersona(petId, pet);
+  const text = (input: unknown, fallbackValue: string, limit = 220) => (
+    typeof input === 'string' && input.trim() ? input.trim().slice(0, limit) : fallbackValue
+  );
+  return {
+    petId,
+    nickname: text(value.nickname, fallback.nickname, 40),
+    personality: text(value.personality, fallback.personality),
+    tone: text(value.tone, fallback.tone),
+    relationship: text(value.relationship, fallback.relationship),
+    speakingStyle: text(value.speakingStyle, fallback.speakingStyle),
+    updatedAt: typeof value.updatedAt === 'string' ? value.updatedAt : fallback.updatedAt
+  };
+}
+
+function getPersona(petId: string): CompanionPersona {
+  const pet = petLibrary().find((item) => item.id === petId);
+  return sanitizePersona(readJson<Partial<CompanionPersona>>(personaPath(petId), defaultPersona(petId, pet)), petId, pet);
+}
+
+function savePersona(persona: CompanionPersona) {
+  writeJson(personaPath(persona.petId), persona);
+}
+
+function getMessages(petId: string): CompanionMessage[] {
+  const messages = readJson<CompanionMessage[]>(messagesPath(petId), []);
+  return Array.isArray(messages)
+    ? messages
+      .filter((item) => item && item.petId === petId && (item.role === 'user' || item.role === 'assistant') && typeof item.content === 'string')
+      .slice(-maxCompanionMessagesPerPet)
+    : [];
+}
+
+function saveMessages(petId: string, messages: CompanionMessage[]) {
+  writeJson(messagesPath(petId), messages.slice(-maxCompanionMessagesPerPet));
+}
+
+function appendMessage(petId: string, role: CompanionMessage['role'], content: string) {
+  const message: CompanionMessage = {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    petId,
+    role,
+    content: content.trim(),
+    createdAt: new Date().toISOString()
+  };
+  const messages = [...getMessages(petId), message].slice(-maxCompanionMessagesPerPet);
+  saveMessages(petId, messages);
+  return message;
+}
+
+function getCompanionSnapshot(petId = getSettings().currentPetId): CompanionSnapshot {
+  const settings = getSettings();
+  return {
+    currentPetMemory: getMemory(petId),
+    currentPetPersona: getPersona(petId),
+    recentMessages: getMessages(petId).slice(-20),
+    status: {
+      configured: settings.companion.provider !== 'disabled' && Boolean(settings.companion.apiBaseUrl && settings.companion.apiKey && settings.companion.model),
+      lastError: lastCompanionError
+    }
+  };
+}
+
 function getSnapshot(): AppSnapshot {
   const settings = getSettings();
   const pets = petLibrary();
@@ -417,6 +691,7 @@ function getSnapshot(): AppSnapshot {
   return {
     settings,
     pets,
+    companion: getCompanionSnapshot(settings.currentPetId),
     platform: process.platform,
     version: app.getVersion()
   };
@@ -505,6 +780,197 @@ function deletePet(petId: string): DeletePetResult {
   return { ok: true, message: `已删除 ${pet.displayName}。`, snapshot: getSnapshot() };
 }
 
+function currentPetForCompanion() {
+  const settings = getSettings();
+  return petLibrary().find((item) => item.id === settings.currentPetId);
+}
+
+function localCompanionReply(input: string, proactive = false) {
+  const pet = currentPetForCompanion();
+  const name = pet?.displayName ?? '我';
+  const short = input.trim().slice(0, 40);
+  if (proactive) {
+    return `${name}想你啦。现在要不要休息一下，或者和我说说你在忙什么？`;
+  }
+  if (!short) return `${name}在这里，想听你说话。`;
+  return `我听到了：“${short}”。我还没接上模型服务，但会先把这次聊天记在本地。`;
+}
+
+function updateMemoryFromTurn(petId: string, userInput: string, assistantReply: string) {
+  const settings = getSettings();
+  if (!settings.companion.memoryEnabled) return;
+  const memory = getMemory(petId);
+  const normalizedInput = userInput.trim();
+  const shouldStoreUserFact = normalizedInput &&
+    normalizedInput !== '角色主动说话' &&
+    !normalizedInput.startsWith('请主动');
+  const fact = shouldStoreUserFact ? normalizedInput.slice(0, 72) : '';
+  const facts = fact
+    ? [fact, ...memory.facts.filter((item) => item !== fact)].slice(0, 8)
+    : memory.facts;
+  const summary = facts.length > 0
+    ? `已记录 ${facts.length} 条关于用户的偏好和互动线索。最近：${facts.slice(0, 3).join('；')}`
+    : memory.summary;
+  void assistantReply;
+  saveMemory({
+    petId,
+    facts,
+    summary: summary.slice(0, 220),
+    updatedAt: new Date().toISOString()
+  });
+}
+
+function companionSystemPrompt(pet: PetLibraryItem | undefined, memory: CompanionMemory, persona: CompanionPersona, proactive: boolean) {
+  const name = persona.nickname || pet?.displayName || '桌边小伴';
+  const description = pet?.description ?? '一个陪伴用户的桌面宠物。';
+  const facts = memory.facts.length ? memory.facts.map((item) => `- ${item}`).join('\n') : '暂无';
+  return [
+    `你是桌面宠物角色“${name}”。${description}`,
+    `性格：${persona.personality}`,
+    `语气：${persona.tone}`,
+    `关系定位：${persona.relationship}`,
+    `说话风格：${persona.speakingStyle}`,
+    '你在和用户长期相处，有陪伴感，但不要过度夸张。',
+    proactive ? '这次是你主动开口，请用一句轻柔的话开启互动。' : '请直接回复用户当前消息。',
+    '回复不超过 80 个中文字符，适合显示在桌面气泡或小聊天框里。',
+    `这个角色自己的长期记忆：\n${memory.summary || '暂无'}`,
+    `关键事实：\n${facts}`
+  ].join('\n\n');
+}
+
+async function callOpenAiCompatible(settings: CompanionSettings, messages: { role: 'system' | 'user' | 'assistant'; content: string }[]) {
+  const response = await fetch(`${settings.apiBaseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${settings.apiKey}`
+    },
+    body: JSON.stringify({
+      model: settings.model,
+      messages,
+      temperature: 0.8,
+      max_tokens: 180
+    })
+  });
+  if (!response.ok) {
+    throw new Error(`模型服务返回 ${response.status}`);
+  }
+  const data = await response.json() as {
+    choices?: { message?: { content?: string } }[];
+  };
+  const content = data.choices?.[0]?.message?.content?.trim();
+  if (!content) throw new Error('模型没有返回可展示内容。');
+  return content.slice(0, 240);
+}
+
+async function generateCompanionReply(userInput: string, proactive = false) {
+  const settings = getSettings();
+  const petId = settings.currentPetId;
+  const pet = currentPetForCompanion();
+  const memory = getMemory(petId);
+  const persona = getPersona(petId);
+  const history = getMessages(petId).slice(-10).map((message) => ({
+    role: message.role,
+    content: message.content
+  }));
+
+  if (settings.companion.provider === 'disabled' || !settings.companion.apiBaseUrl || !settings.companion.apiKey || !settings.companion.model) {
+    lastCompanionError = settings.companion.provider === 'disabled' ? null : '模型/API 尚未配置完整，已使用本地回退回复。';
+    return localCompanionReply(userInput, proactive);
+  }
+
+  const messages = [
+    { role: 'system' as const, content: companionSystemPrompt(pet, memory, persona, proactive) },
+    ...history,
+    { role: 'user' as const, content: proactive ? '请主动对我说一句话。' : userInput }
+  ];
+  try {
+    const reply = await callOpenAiCompatible(settings.companion, messages);
+    lastCompanionError = null;
+    return reply;
+  } catch (error) {
+    lastCompanionError = error instanceof Error ? error.message : '模型服务调用失败。';
+    return localCompanionReply(userInput, proactive);
+  }
+}
+
+async function sendCompanionMessage(content: string): Promise<CompanionReplyResult> {
+  const text = content.trim();
+  if (!text) {
+    return { ok: false, message: '先输入一句想说的话。', snapshot: getCompanionSnapshot() };
+  }
+  const settings = getSettings();
+  const petId = settings.currentPetId;
+  appendMessage(petId, 'user', text);
+  const replyText = await generateCompanionReply(text);
+  const reply = appendMessage(petId, 'assistant', replyText);
+  updateMemoryFromTurn(petId, text, replyText);
+  broadcastCompanion();
+  return { ok: true, message: '已回复。', reply, snapshot: getCompanionSnapshot(petId) };
+}
+
+async function proactiveCompanionMessage(): Promise<CompanionReplyResult> {
+  const settings = getSettings();
+  if (!settings.companion.enabled || !settings.companion.proactiveEnabled) {
+    return { ok: false, message: '主动回复未开启。', snapshot: getCompanionSnapshot() };
+  }
+  const petId = settings.currentPetId;
+  const replyText = await generateCompanionReply('', true);
+  const reply = appendMessage(petId, 'assistant', replyText);
+  updateMemoryFromTurn(petId, '角色主动说话', replyText);
+  broadcastCompanion();
+  return { ok: true, message: '角色主动说话。', reply, snapshot: getCompanionSnapshot(petId) };
+}
+
+async function testCompanionProvider(): Promise<CompanionTestProviderResult> {
+  const settings = getSettings();
+  if (settings.companion.provider === 'disabled') {
+    lastCompanionError = '请选择一个模型服务。';
+    return { ok: false, message: lastCompanionError, snapshot: getCompanionSnapshot() };
+  }
+  if (!settings.companion.apiBaseUrl || !settings.companion.apiKey || !settings.companion.model) {
+    lastCompanionError = '请填写 API Base URL、模型和 API Key。';
+    return { ok: false, message: lastCompanionError, snapshot: getCompanionSnapshot() };
+  }
+  try {
+    await callOpenAiCompatible(settings.companion, [
+      { role: 'system', content: '你是连接测试助手。' },
+      { role: 'user', content: '请只回复 OK。' }
+    ]);
+    lastCompanionError = null;
+    const snapshot = getCompanionSnapshot();
+    broadcastCompanion();
+    return { ok: true, message: '模型服务连接成功。', snapshot };
+  } catch (error) {
+    lastCompanionError = error instanceof Error ? error.message : '模型服务连接失败。';
+    const snapshot = getCompanionSnapshot();
+    broadcastCompanion();
+    return { ok: false, message: `连接失败：${lastCompanionError}`, snapshot };
+  }
+}
+
+function clearCompanionMemory(): CompanionClearMemoryResult {
+  const petId = getSettings().currentPetId;
+  saveMemory(defaultMemory(petId));
+  saveMessages(petId, []);
+  broadcastCompanion();
+  return { ok: true, message: '已清除当前角色的记忆和聊天记录。', snapshot: getCompanionSnapshot(petId) };
+}
+
+function updateCompanionPersona(personaPatch: Partial<CompanionPersona>): CompanionUpdatePersonaResult {
+  const petId = getSettings().currentPetId;
+  const current = getPersona(petId);
+  const next = sanitizePersona({
+    ...current,
+    ...personaPatch,
+    petId,
+    updatedAt: new Date().toISOString()
+  }, petId, currentPetForCompanion());
+  savePersona(next);
+  broadcastCompanion();
+  return { ok: true, message: '角色设定已保存。', snapshot: getCompanionSnapshot(petId) };
+}
+
 function updateTray() {
   if (!tray) return;
   const settings = getSettings();
@@ -525,13 +991,78 @@ function updateTray() {
   ]));
 }
 
+function syncTray(settings = getSettings()) {
+  if (!settings.showMenuBarIcon) {
+    destroyTray();
+    return;
+  }
+  if (!tray) {
+    createTray();
+    return;
+  }
+  updateTray();
+}
+
 function createTray() {
+  if (tray) {
+    updateTray();
+    return;
+  }
   const icon = nativeImage.createFromPath(trayIconPath).resize({ width: 18, height: 18 });
   tray = new Tray(icon.isEmpty() ? nativeImage.createFromNamedImage('NSStatusAvailable') : icon);
   updateTray();
   tray.on('click', () => {
     tray?.popUpContextMenu();
   });
+}
+
+function createApplicationMenu() {
+  const template: Electron.MenuItemConstructorOptions[] = [
+    ...(process.platform === 'darwin'
+      ? [{
+        label: app.name,
+        submenu: [
+          { label: '打开设置', accelerator: 'CmdOrCtrl+,', click: createSettingsWindow },
+          { type: 'separator' as const },
+          { role: 'hide' as const },
+          { role: 'hideOthers' as const },
+          { role: 'unhide' as const },
+          { type: 'separator' as const },
+          { role: 'quit' as const }
+        ]
+      }]
+      : []),
+    {
+      label: '桌边小伴',
+      submenu: [
+        { label: '打开设置', accelerator: process.platform === 'darwin' ? undefined : 'CmdOrCtrl+,', click: createSettingsWindow },
+        {
+          label: '显示/隐藏宠物',
+          click: () => patchSettings({ petVisible: !getSettings().petVisible })
+        },
+        { label: '重置位置', click: resetPetPosition }
+      ]
+    },
+    {
+      label: '编辑',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        { role: 'selectAll' }
+      ]
+    }
+  ];
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+}
+
+function destroyTray() {
+  if (!tray) return;
+  tray.destroy();
+  tray = null;
 }
 
 function resetPetPosition() {
@@ -585,12 +1116,35 @@ function registerIpc() {
   });
   ipcMain.handle('pet:import', () => importPet());
   ipcMain.handle('pet:delete', (_event, petId: string) => deletePet(petId));
+  ipcMain.handle('pet:setInteractiveRegions', (_event, regions: PetInteractiveRegion[]) => {
+    petInteractiveRegions = Array.isArray(regions)
+      ? regions
+        .filter((region) => (
+          Number.isFinite(region.x) &&
+          Number.isFinite(region.y) &&
+          Number.isFinite(region.width) &&
+          Number.isFinite(region.height) &&
+          region.width > 0 &&
+          region.height > 0
+        ))
+        .map((region) => ({
+          ...region,
+          radius: Number.isFinite(region.radius) ? clamp(Number(region.radius), 0, 40) : 0
+        }))
+        .slice(0, 6)
+      : [];
+  });
+  ipcMain.handle('companion:sendMessage', (_event, content: string) => sendCompanionMessage(content));
+  ipcMain.handle('companion:proactive', () => proactiveCompanionMessage());
+  ipcMain.handle('companion:testProvider', () => testCompanionProvider());
+  ipcMain.handle('companion:updatePersona', (_event, personaPatch: Partial<CompanionPersona>) => updateCompanionPersona(personaPatch));
+  ipcMain.handle('companion:clearMemory', () => clearCompanionMemory());
 }
 
 app.whenReady().then(() => {
   registerIpc();
+  createApplicationMenu();
   createPetWindow();
-  createTray();
   applySettings();
 
   if (isSmokeTest) {
@@ -603,6 +1157,7 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createPetWindow();
     }
+    createSettingsWindow();
   });
 });
 

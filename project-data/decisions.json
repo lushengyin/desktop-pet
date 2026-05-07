@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-05-04",
+  "updatedAt": "2026-05-06",
   "decisions": [
     {
       "id": "D1",
@@ -50,6 +50,13 @@
       "topic": "仓库",
       "status": "confirmed",
       "decision": "项目远程仓库为 git@github.com:lushengyin/desktop-pet.git。"
+    },
+    {
+      "id": "D8",
+      "date": "2026-05-06",
+      "topic": "智能陪伴与角色记忆方案",
+      "status": "confirmed",
+      "decision": "新增智能陪伴能力按独立里程碑 M7 规划：先设计可替换回复服务、每角色独立本地记忆、专门设置模块和桌面聊天入口，同时保留现有手动气泡展示。"
     }
   ]
 }

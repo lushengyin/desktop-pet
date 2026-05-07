@@ -1,7 +1,7 @@
 # Confirmed Plan
 
 Status: development_complete_local_release_ready
-Updated: 2026-05-04
+Updated: 2026-05-06
 
 ## Confirmed
 
@@ -14,6 +14,12 @@ Updated: 2026-05-04
 - 包管理器：使用本机已有工具，默认 pnpm。
 - 默认素材：`/Users/lusheng/Documents/MyProjects/Codex-Pets/pets/lulu`。
 - GitHub origin：`git@github.com:lushengyin/desktop-pet.git`。
+- 新增规划方向：智能陪伴功能需要支持角色主动说话、聊天互动、长期记忆、每个角色独立记忆空间，并兼容现有手动气泡展示。
+- 智能陪伴拆分方案已确认，并按 M7 进入实现。
+
+## Pending Confirmation
+
+- 后续可继续确认是否接入特定模型供应商、是否加密本地 API Key，以及是否扩展更复杂的记忆检索系统。
 
 ## Prep Checklist
 

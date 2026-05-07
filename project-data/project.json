@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "name": "Lulu Desktop Pet",
   "createdAt": "2026-05-04",
-  "updatedAt": "2026-05-05",
+  "updatedAt": "2026-05-06",
   "status": "development_complete_local_release_ready",
-  "description": "一款 macOS 优先的完整可用桌面宠物应用：宠物可以在桌面陪伴用户、任意拖动位置、调整大小、复刻自定义宠物“噜噜”的形象与动画，支持自定义宠物导入/切换，并提供菜单栏入口和深色优先的设置面板。",
+  "description": "一款 macOS 优先的完整可用桌面宠物应用：宠物可以在桌面陪伴用户、任意拖动位置、调整大小、支持内置与自定义宠物导入/切换，并提供菜单栏入口、深色优先设置面板、手动气泡展示和规划中的智能陪伴/角色记忆能力。",
   "sourceOfTruth": {
     "structured": "project-data/",
     "humanReadable": "docs/"

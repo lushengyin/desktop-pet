@@ -1,8 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   Brush,
+  Brain,
   CircleHelp,
+  Eraser,
   Eye,
   FolderInput,
   Info,
@@ -15,9 +17,10 @@ import {
   SlidersHorizontal,
   Sparkles,
   Trash2,
+  Zap,
   Volume2
 } from 'lucide-react';
-import type { AppSettings, AppSnapshot, PetAction, PetLibraryItem, PetMood } from '../shared/types';
+import type { AppSettings, AppSnapshot, CompanionModelConfig, CompanionSettings, PetAction, PetLibraryItem, PetMood } from '../shared/types';
 import './styles.css';
 
 const fallbackSnapshot: AppSnapshot = {
@@ -35,13 +38,85 @@ const fallbackSnapshot: AppSnapshot = {
     cloudOffsetY: 0,
     theme: 'dark',
     launchAtLogin: false,
+    showMenuBarIcon: true,
     soundEnabled: true,
     currentPetId: 'lulu',
+    companion: {
+      enabled: false,
+      memoryEnabled: true,
+      proactiveEnabled: false,
+      bubbleMode: 'manual',
+      replyFrequencyMinutes: 20,
+      activeModelConfigId: 'default-model',
+      modelConfigs: [
+        {
+          id: 'default-model',
+          name: '默认模型',
+          provider: 'disabled',
+          apiBaseUrl: 'https://api.openai.com/v1',
+          apiKey: '',
+          model: 'gpt-4.1-mini'
+        }
+      ],
+      provider: 'disabled',
+      apiBaseUrl: 'https://api.openai.com/v1',
+      apiKey: '',
+      model: 'gpt-4.1-mini'
+    },
     petPosition: null
   },
   pets: [],
+  companion: {
+    currentPetMemory: {
+      petId: 'lulu',
+      summary: '',
+      facts: [],
+      updatedAt: null
+    },
+    currentPetPersona: {
+      petId: 'lulu',
+      nickname: '噜噜',
+      personality: '温柔、亲近、有一点撒娇，会主动关心用户。',
+      tone: '自然、简短、像熟悉的人在身边说话。',
+      relationship: '长期陪伴用户的桌面伙伴，关系亲密但不过度冒犯。',
+      speakingStyle: '每次回复尽量短，适合显示在桌面气泡里，不说教。',
+      updatedAt: null
+    },
+    recentMessages: [],
+    status: {
+      configured: false,
+      lastError: null
+    }
+  },
   platform: 'darwin',
   version: '0.1.0'
+};
+
+const companionProviderPresets: Record<CompanionSettings['provider'], {
+  label: string;
+  apiBaseUrl: string;
+  model: string;
+}> = {
+  disabled: {
+    label: '未配置',
+    apiBaseUrl: 'https://api.openai.com/v1',
+    model: 'gpt-4.1-mini'
+  },
+  'openai-compatible': {
+    label: 'OpenAI-compatible',
+    apiBaseUrl: 'https://api.openai.com/v1',
+    model: 'gpt-4.1-mini'
+  },
+  deepseek: {
+    label: 'DeepSeek',
+    apiBaseUrl: 'https://api.deepseek.com',
+    model: 'deepseek-v4-flash'
+  },
+  glm: {
+    label: 'GLM',
+    apiBaseUrl: 'https://open.bigmodel.cn/api/paas/v4',
+    model: 'glm-4-flash'
+  }
 };
 
 function useSnapshot() {
@@ -62,10 +137,14 @@ function useSnapshot() {
     const offPets = window.lulu.onPetsChanged((next) => {
       setSnapshot(next);
     });
+    const offCompanion = window.lulu.onCompanionChanged((companion) => {
+      setSnapshot((current) => ({ ...current, companion }));
+    });
     return () => {
       mounted = false;
       offSettings();
       offPets();
+      offCompanion();
     };
   }, []);
 
@@ -88,10 +167,17 @@ function App() {
 }
 
 function PetView({ snapshot, loading }: { snapshot: AppSnapshot; loading: boolean }) {
+  const stageRef = useRef<HTMLDivElement>(null);
+  const cloudRef = useRef<HTMLDivElement>(null);
+  const chatRef = useRef<HTMLDivElement>(null);
   const [mood, setMood] = useState<PetMood>('idle');
   const [dragAction, setDragAction] = useState<PetAction>('running-right');
   const [frame, setFrame] = useState(0);
   const [cloudIndex, setCloudIndex] = useState(0);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatText, setChatText] = useState('');
+  const [chatBusy, setChatBusy] = useState(false);
+  const [companionBubble, setCompanionBubble] = useState('');
   const pet = useMemo(() => currentPet(snapshot), [snapshot]);
   const manifest = pet?.manifest;
   const columns = manifest?.columns ?? 8;
@@ -104,7 +190,12 @@ function PetView({ snapshot, loading }: { snapshot: AppSnapshot; loading: boolea
     () => sanitizeCloudMessages(snapshot.settings.cloudMessages),
     [snapshot.settings.cloudMessages]
   );
-  const activeCloudMessage = cloudMessages[cloudIndex % cloudMessages.length] ?? '';
+  const manualCloudMessage = cloudMessages[cloudIndex % cloudMessages.length] ?? '';
+  const latestCompanionMessage = snapshot.companion.recentMessages
+    .filter((message) => message.role === 'assistant')
+    .at(-1)?.content ?? '';
+  const companionCloudMessage = companionBubble || latestCompanionMessage;
+  const activeCloudMessage = cloudMessageForMode(snapshot.settings.companion.bubbleMode, manualCloudMessage, companionCloudMessage);
   const selectedAction = selectedActionId(snapshot.settings.currentAction, pet);
   const displayAction = mood === 'dragging'
     ? preferredActionId(pet, [dragAction, 'urgent', selectedAction])
@@ -138,6 +229,72 @@ function PetView({ snapshot, loading }: { snapshot: AppSnapshot; loading: boolea
     return () => window.clearInterval(timer);
   }, [snapshot.settings.cloudEnabled, cloudMessages]);
 
+  useEffect(() => {
+    setCompanionBubble('');
+    setChatOpen(false);
+  }, [snapshot.settings.currentPetId]);
+
+  useEffect(() => {
+    const measureRegions = () => {
+      const stage = stageRef.current;
+      if (!stage) {
+        void window.lulu.setPetInteractiveRegions([]);
+        return;
+      }
+      const stageRect = stage.getBoundingClientRect();
+      const target = chatOpen ? chatRef.current : cloudRef.current;
+      if (!target) {
+        void window.lulu.setPetInteractiveRegions([]);
+        return;
+      }
+      const rect = target.getBoundingClientRect();
+      void window.lulu.setPetInteractiveRegions([{
+        x: Math.round(rect.left - stageRect.left),
+        y: Math.round(rect.top - stageRect.top - (chatOpen ? 0 : 6)),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height + (chatOpen ? 0 : 12)),
+        radius: chatOpen ? 14 : 16
+      }]);
+    };
+    measureRegions();
+    const resizeObserver = new ResizeObserver(measureRegions);
+    if (stageRef.current) resizeObserver.observe(stageRef.current);
+    if (cloudRef.current) resizeObserver.observe(cloudRef.current);
+    if (chatRef.current) resizeObserver.observe(chatRef.current);
+    const animationFrame = window.requestAnimationFrame(measureRegions);
+    return () => {
+      resizeObserver.disconnect();
+      window.cancelAnimationFrame(animationFrame);
+      void window.lulu.setPetInteractiveRegions([]);
+    };
+  }, [
+    activeCloudMessage,
+    chatOpen,
+    snapshot.companion.recentMessages,
+    snapshot.settings.cloudEnabled,
+    snapshot.settings.cloudOffsetX,
+    snapshot.settings.cloudOffsetY,
+    snapshot.settings.companion.enabled
+  ]);
+
+  useEffect(() => {
+    if (!snapshot.settings.companion.enabled || !snapshot.settings.companion.proactiveEnabled) return;
+    const delay = Math.max(100, snapshot.settings.companion.replyFrequencyMinutes * 60_000);
+    const timer = window.setInterval(() => {
+      void window.lulu.requestProactiveCompanionMessage().then((result) => {
+        if (result.reply?.content) {
+          setCompanionBubble(result.reply.content);
+        }
+      });
+    }, delay);
+    return () => window.clearInterval(timer);
+  }, [
+    snapshot.settings.companion.enabled,
+    snapshot.settings.companion.proactiveEnabled,
+    snapshot.settings.companion.replyFrequencyMinutes,
+    snapshot.settings.currentPetId
+  ]);
+
   const spriteFrame = frames[frame] ?? 0;
   const x = spriteFrame % columns;
   const y = Math.floor(spriteFrame / columns);
@@ -166,18 +323,39 @@ function PetView({ snapshot, loading }: { snapshot: AppSnapshot; loading: boolea
     void window.lulu.endPetDrag();
   };
 
+  const sendChatMessage = async () => {
+    const text = chatText.trim();
+    if (!text || chatBusy) return;
+    setChatBusy(true);
+    setChatText('');
+    const result = await window.lulu.sendCompanionMessage(text);
+    if (result.reply?.content) {
+      setCompanionBubble(result.reply.content);
+      setMood('happy');
+    }
+    setChatBusy(false);
+  };
+
+  const openContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    void window.lulu.openSettings();
+  };
+
   if (loading || !pet) {
     return <div className="pet-stage pet-loading" />;
   }
 
   return (
     <div
+      ref={stageRef}
       className="pet-stage"
       onDoubleClick={() => setMood('happy')}
       onPointerDown={startDrag}
       onPointerMove={drag}
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
+      onContextMenu={openContextMenu}
       title={`${pet.displayName} - 双击互动`}
     >
       <div
@@ -190,15 +368,68 @@ function PetView({ snapshot, loading }: { snapshot: AppSnapshot; loading: boolea
         <div className="pet-anchor">
           {snapshot.settings.cloudEnabled && activeCloudMessage && (
             <div
+              ref={cloudRef}
               className="pet-cloud"
               key={`${snapshot.settings.currentPetId}-${cloudIndex}`}
               style={{
                 ['--cloud-offset-x' as string]: `${snapshot.settings.cloudOffsetX}px`,
                 ['--cloud-offset-y' as string]: `${snapshot.settings.cloudOffsetY}px`
               }}
+              onPointerDown={(event) => event.stopPropagation()}
             >
               <span>{activeCloudMessage}</span>
-              <i />
+              <button
+                className="pet-cloud-reply"
+                title="回复"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setChatOpen((value) => !value);
+                }}
+                onPointerDown={(event) => event.stopPropagation()}
+              >
+                回复
+              </button>
+            </div>
+          )}
+          {snapshot.settings.companion.enabled && chatOpen && (
+            <div ref={chatRef} className="pet-chat" onPointerDown={(event) => event.stopPropagation()}>
+              <button
+                className="pet-chat-close"
+                title="收起聊天"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setChatOpen(false);
+                }}
+              >
+                ×
+              </button>
+              <div className="pet-chat-log">
+                {snapshot.companion.recentMessages.slice(-4).map((message) => (
+                  <div key={message.id} className={`pet-chat-message ${message.role}`}>
+                    {message.content}
+                  </div>
+                ))}
+                {snapshot.companion.recentMessages.length === 0 && (
+                  <div className="pet-chat-empty">想和我说什么都可以。</div>
+                )}
+              </div>
+              <form
+                className="pet-chat-form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void sendChatMessage();
+                }}
+              >
+                <input
+                  value={chatText}
+                  disabled={chatBusy}
+                  onChange={(event) => setChatText(event.target.value)}
+                  placeholder={chatBusy ? '回复中...' : '和我说句话'}
+                />
+                <button disabled={chatBusy || !chatText.trim()}>{chatBusy ? '...' : '发'}</button>
+              </form>
             </div>
           )}
           <div
@@ -218,8 +449,7 @@ function PetView({ snapshot, loading }: { snapshot: AppSnapshot; loading: boolea
 const navItems = [
   { id: 'general', label: '通用', caption: '系统与基础行为', icon: Settings },
   { id: 'display', label: '显示', caption: '窗口与位置', icon: Monitor },
-  { id: 'pet', label: '宠物', caption: '形象与动画', icon: Sparkles },
-  { id: 'behavior', label: '行为', caption: '互动与恢复', icon: SlidersHorizontal },
+  { id: 'pet', label: '宠物', caption: '形象、互动与陪伴', icon: Sparkles },
   { id: 'sound', label: '声音', caption: '通知与提示音', icon: Volume2 },
   { id: 'integrations', label: '集成', caption: 'Hooks 与扩展', icon: Link },
   { id: 'shortcuts', label: '快捷键', caption: '未来操作入口', icon: Keyboard },
@@ -241,7 +471,23 @@ function SettingsView({
   const [notice, setNotice] = useState('');
   const [cloudDraft, setCloudDraft] = useState('');
   const [cloudEditorOpen, setCloudEditorOpen] = useState(false);
+  const [testingProvider, setTestingProvider] = useState(false);
+  const [personaDraft, setPersonaDraft] = useState(fallbackSnapshot.companion.currentPetPersona);
+  const [modelDraft, setModelDraft] = useState<CompanionModelConfig | null>(null);
+  const [settingsChatText, setSettingsChatText] = useState('');
+  const [settingsChatBusy, setSettingsChatBusy] = useState(false);
+  const [petTab, setPetTab] = useState<'appearance' | 'interaction' | 'companion'>('appearance');
+  const [petQuery, setPetQuery] = useState('');
+  const [petSourceFilter, setPetSourceFilter] = useState<'all' | 'bundled' | 'imported'>('all');
   const pet = currentPet(snapshot);
+  const filteredPets = snapshot.pets.filter((item) => {
+    const query = petQuery.trim().toLowerCase();
+    const matchesQuery = !query ||
+      item.displayName.toLowerCase().includes(query) ||
+      item.id.toLowerCase().includes(query);
+    const matchesSource = petSourceFilter === 'all' || item.source === petSourceFilter;
+    return matchesQuery && matchesSource;
+  });
 
   useEffect(() => {
     if (!notice) return;
@@ -252,6 +498,10 @@ function SettingsView({
   useEffect(() => {
     setCloudDraft(snapshot.settings.cloudMessages.join('\n'));
   }, [snapshot.settings.cloudMessages]);
+
+  useEffect(() => {
+    setPersonaDraft(snapshot.companion.currentPetPersona);
+  }, [snapshot.settings.currentPetId, snapshot.companion.currentPetPersona]);
 
   const importPet = async () => {
     const result = await window.lulu.importPet();
@@ -288,6 +538,124 @@ function SettingsView({
     setCloudDraft(nextMessages.join('\n'));
     setNotice('云朵文案已更新。');
     setCloudEditorOpen(false);
+  };
+
+  const updateCompanion = (patch: Partial<CompanionSettings>) => updateSettings({
+    companion: {
+      ...snapshot.settings.companion,
+      ...patch
+    }
+  });
+
+  const activeModelConfig = snapshot.settings.companion.modelConfigs.find((config) => (
+    config.id === snapshot.settings.companion.activeModelConfigId
+  )) ?? snapshot.settings.companion.modelConfigs[0];
+  const activeModelConfigured = Boolean(modelDraft && modelDraft.provider !== 'disabled' && modelDraft.apiBaseUrl && modelDraft.apiKey && modelDraft.model);
+  const modelDraftDirty = Boolean(activeModelConfig && modelDraft && JSON.stringify(activeModelConfig) !== JSON.stringify(modelDraft));
+
+  const updateActiveModelConfig = (patch: Partial<CompanionModelConfig>) => {
+    const currentConfig = activeModelConfig;
+    if (!currentConfig) return Promise.resolve();
+    const modelConfigs = snapshot.settings.companion.modelConfigs.map((config) => (
+      config.id === currentConfig.id ? { ...config, ...patch } : config
+    ));
+    return updateCompanion({
+      modelConfigs,
+      activeModelConfigId: currentConfig.id
+    });
+  };
+
+  const updateModelDraft = (patch: Partial<CompanionModelConfig>) => {
+    setModelDraft((current) => current ? { ...current, ...patch } : current);
+  };
+
+  const updateCompanionProvider = (provider: CompanionSettings['provider']) => {
+    const preset = companionProviderPresets[provider];
+    updateModelDraft({
+      provider,
+      apiBaseUrl: preset.apiBaseUrl,
+      model: preset.model
+    });
+  };
+
+  useEffect(() => {
+    setModelDraft(activeModelConfig ? { ...activeModelConfig } : null);
+  }, [activeModelConfig?.id]);
+
+  const saveModelConfig = async () => {
+    if (!modelDraft) return;
+    await updateActiveModelConfig(modelDraft);
+    setNotice('模型配置已保存。');
+  };
+
+  const testSelectedModelProvider = async () => {
+    if (modelDraftDirty) {
+      await saveModelConfig();
+    }
+    await testCompanionProvider();
+  };
+
+  const selectModelConfig = (activeModelConfigId: string) => updateCompanion({ activeModelConfigId });
+
+  const addModelConfig = () => {
+    const id = `model-${Date.now().toString(36)}`;
+    const nextConfig: CompanionModelConfig = {
+      id,
+      name: `模型 ${snapshot.settings.companion.modelConfigs.length + 1}`,
+      provider: 'deepseek',
+      apiBaseUrl: companionProviderPresets.deepseek.apiBaseUrl,
+      apiKey: '',
+      model: companionProviderPresets.deepseek.model
+    };
+    return updateCompanion({
+      modelConfigs: [...snapshot.settings.companion.modelConfigs, nextConfig],
+      activeModelConfigId: id
+    });
+  };
+
+  const deleteActiveModelConfig = () => {
+    if (!activeModelConfig || snapshot.settings.companion.modelConfigs.length <= 1) return;
+    const confirmed = window.confirm(`删除模型配置“${activeModelConfig.name}”？`);
+    if (!confirmed) return;
+    const modelConfigs = snapshot.settings.companion.modelConfigs.filter((config) => config.id !== activeModelConfig.id);
+    void updateCompanion({
+      modelConfigs,
+      activeModelConfigId: modelConfigs[0]?.id
+    });
+  };
+
+  const clearCompanionMemory = async () => {
+    const confirmed = window.confirm(`清除“${pet?.displayName ?? '当前角色'}”的记忆和聊天记录？`);
+    if (!confirmed) return;
+    const result = await window.lulu.clearCompanionMemory();
+    setSnapshot((current) => ({ ...current, companion: result.snapshot }));
+    setNotice(result.message);
+  };
+
+  const savePersona = async () => {
+    const result = await window.lulu.updateCompanionPersona(personaDraft);
+    setSnapshot((current) => ({ ...current, companion: result.snapshot }));
+    setNotice(result.message);
+  };
+
+  const sendSettingsChatMessage = async () => {
+    const text = settingsChatText.trim();
+    if (!text || settingsChatBusy) return;
+    setSettingsChatBusy(true);
+    setSettingsChatText('');
+    const result = await window.lulu.sendCompanionMessage(text);
+    setSnapshot((current) => ({ ...current, companion: result.snapshot }));
+    setNotice(result.message);
+    setSettingsChatBusy(false);
+  };
+
+  const testCompanionProvider = async () => {
+    if (testingProvider) return;
+    setTestingProvider(true);
+    const result = await window.lulu.testCompanionProvider();
+    setSnapshot((current) => ({ ...current, companion: result.snapshot }));
+    setNotice(result.message);
+    setTestingProvider(false);
   };
 
   return (
@@ -332,6 +700,9 @@ function SettingsView({
             <SettingRow title="登录时打开" caption="启动 macOS 后自动显示宠物">
               <Switch checked={snapshot.settings.launchAtLogin} onChange={(launchAtLogin) => updateSettings({ launchAtLogin })} />
             </SettingRow>
+            <SettingRow title="菜单栏图标" caption="关闭后可通过 Dock、快捷键或宠物右键打开设置">
+              <Switch checked={snapshot.settings.showMenuBarIcon} onChange={(showMenuBarIcon) => updateSettings({ showMenuBarIcon })} />
+            </SettingRow>
             <SettingRow title="主题" caption="当前产品优先使用深色面板">
               <select value={snapshot.settings.theme} onChange={(event) => updateSettings({ theme: event.target.value as AppSettings['theme'] })}>
                 <option value="dark">深色</option>
@@ -358,110 +729,207 @@ function SettingsView({
         )}
         {active === 'pet' && (
           <>
-            <Panel title="当前宠物">
-              <div className="pet-detail">
-                <PetPreview pet={pet} />
-                <div>
-                  <h3>{pet?.displayName ?? '宠物'}</h3>
-                  <p>{pet?.description ?? '默认桌面伙伴'}</p>
-                  <div className="tag-row">
-                    <span>8 x 9 Atlas</span>
-                    <span>WebP</span>
-                    <span>{pet?.source === 'bundled' ? '内置' : '导入'}</span>
+            <div className="section-tabs">
+              <button className={petTab === 'appearance' ? 'active' : ''} onClick={() => setPetTab('appearance')}>形象动画</button>
+              <button className={petTab === 'interaction' ? 'active' : ''} onClick={() => setPetTab('interaction')}>互动行为</button>
+              <button className={petTab === 'companion' ? 'active' : ''} onClick={() => setPetTab('companion')}>智能陪伴</button>
+            </div>
+            {petTab === 'appearance' && (
+              <>
+                <Panel title="当前宠物">
+                  <div className="pet-detail compact">
+                    <PetPreview pet={pet} />
+                    <div>
+                      <h3>{pet?.displayName ?? '宠物'}</h3>
+                      <p>{pet?.description ?? '默认桌面伙伴'}</p>
+                      <div className="tag-row">
+                        <span>{pet?.source === 'bundled' ? '内置' : '导入'}</span>
+                        <span>{pet?.manifest.columns ?? 8} x {pet?.manifest.rows ?? 9}</span>
+                      </div>
+                    </div>
                   </div>
+                  <SettingRow title="动画速度" caption="待机和互动动画速度">
+                    <Range value={snapshot.settings.animationSpeed} min={0.5} max={2} step={0.1} suffix="x" onChange={(animationSpeed) => updateSettings({ animationSpeed })} />
+                  </SettingRow>
+                  <SettingRow title="当前动作" caption="桌面默认循环动作">
+                    <select value={selectedActionId(snapshot.settings.currentAction, pet)} onChange={(event) => updateSettings({ currentAction: event.target.value })}>
+                      {actionOptions(pet).map((action) => (
+                        <option key={action.id} value={action.id}>{action.label}</option>
+                      ))}
+                    </select>
+                  </SettingRow>
+                </Panel>
+                <Panel title="云朵气泡">
+                  <div className="settings-grid two">
+                    <MiniSetting title="显示气泡" caption="头顶文案">
+                      <Switch checked={snapshot.settings.cloudEnabled} onChange={(cloudEnabled) => updateSettings({ cloudEnabled })} />
+                    </MiniSetting>
+                    <MiniSetting title="文案" caption={`${snapshot.settings.cloudMessages.length} 条`}>
+                      <button className="secondary-button" onClick={() => setCloudEditorOpen(true)}>编辑</button>
+                    </MiniSetting>
+                    <MiniSetting title="左右偏移" caption="避开脸部">
+                      <Range value={snapshot.settings.cloudOffsetX} min={-80} max={80} step={2} suffix="" onChange={(cloudOffsetX) => updateSettings({ cloudOffsetX })} formatValue={(value) => `${value > 0 ? '+' : ''}${Math.round(value)}px`} />
+                    </MiniSetting>
+                    <MiniSetting title="上下偏移" caption="调整高度">
+                      <Range value={snapshot.settings.cloudOffsetY} min={-80} max={80} step={2} suffix="" onChange={(cloudOffsetY) => updateSettings({ cloudOffsetY })} formatValue={(value) => `${value > 0 ? '+' : ''}${Math.round(value)}px`} />
+                    </MiniSetting>
+                  </div>
+                </Panel>
+                <Panel title="宠物库">
+                  <div className="pet-library-toolbar">
+                    <input className="text-input" value={petQuery} placeholder="搜索宠物" onChange={(event) => setPetQuery(event.target.value)} />
+                    <select value={petSourceFilter} onChange={(event) => setPetSourceFilter(event.target.value as typeof petSourceFilter)}>
+                      <option value="all">全部</option>
+                      <option value="bundled">内置</option>
+                      <option value="imported">自定义</option>
+                    </select>
+                    <span>{filteredPets.length} / {snapshot.pets.length}</span>
+                  </div>
+                  <div className="pet-list">
+                    {filteredPets.map((item) => (
+                      <button key={item.id} className={`pet-list-item ${snapshot.settings.currentPetId === item.id ? 'selected' : ''}`} onClick={() => updateSettings({ currentPetId: item.id })}>
+                        <PetPreview pet={item} />
+                        <span>
+                          <strong>{item.displayName}</strong>
+                          <small>{item.source === 'bundled' ? '内置宠物' : '自定义宠物'} · {item.manifest.columns ?? 8} x {item.manifest.rows ?? 9}</small>
+                        </span>
+                        {snapshot.settings.currentPetId === item.id && <em>当前</em>}
+                        {item.source === 'imported' && (
+                          <span role="button" tabIndex={0} className="pet-list-delete" title="删除自定义宠物" onClick={(event) => { event.stopPropagation(); void deletePet(item); }} onKeyDown={(event) => { if (event.key !== 'Enter' && event.key !== ' ') return; event.preventDefault(); event.stopPropagation(); void deletePet(item); }}>
+                            <Trash2 size={15} />
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                    {filteredPets.length === 0 && <div className="pet-list-empty">没有找到匹配的宠物。</div>}
+                  </div>
+                  <div className="panel-actions compact">
+                    <button className="primary-button" onClick={importPet}><FolderInput size={17} />导入宠物</button>
+                  </div>
+                </Panel>
+              </>
+            )}
+            {petTab === 'interaction' && (
+              <Panel title="互动行为">
+                <div className="settings-grid three">
+                  <StatusTile title="双击互动" text="双击触发开心动画" active />
+                  <StatusTile title="位置保护" text="拖动限制在屏幕内" active />
+                  <StatusTile title="配置恢复" text="资源异常时自动回退" active />
                 </div>
-              </div>
-              <SettingRow title="动画速度" caption="控制待机和互动动画播放速度">
-                <Range value={snapshot.settings.animationSpeed} min={0.5} max={2} step={0.1} suffix="x" onChange={(animationSpeed) => updateSettings({ animationSpeed })} />
-              </SettingRow>
-              <SettingRow title="当前动作" caption="选择宠物在桌面的默认循环动作">
-                <select value={selectedActionId(snapshot.settings.currentAction, pet)} onChange={(event) => updateSettings({ currentAction: event.target.value })}>
-                  {actionOptions(pet).map((action) => (
-                    <option key={action.id} value={action.id}>{action.label}</option>
-                  ))}
-                </select>
-              </SettingRow>
-              <SettingRow title="云朵提示" caption="在宠物头顶显示漂浮云朵文案">
-                <Switch checked={snapshot.settings.cloudEnabled} onChange={(cloudEnabled) => updateSettings({ cloudEnabled })} />
-              </SettingRow>
-              <SettingRow title="云朵文案" caption={`当前 ${snapshot.settings.cloudMessages.length} 条，点击编辑`}>
-                <button className="secondary-button" onClick={() => setCloudEditorOpen(true)}>编辑文案</button>
-              </SettingRow>
-              <SettingRow title="左右偏移" caption="向右是正值，用来避开脸部位置">
-                <Range
-                  value={snapshot.settings.cloudOffsetX}
-                  min={-80}
-                  max={80}
-                  step={2}
-                  suffix=""
-                  onChange={(cloudOffsetX) => updateSettings({ cloudOffsetX })}
-                  formatValue={(value) => `${value > 0 ? '+' : ''}${Math.round(value)}px`}
-                />
-              </SettingRow>
-              <SettingRow title="上下偏移" caption="向上是负值，用来抬高云朵位置">
-                <Range
-                  value={snapshot.settings.cloudOffsetY}
-                  min={-80}
-                  max={80}
-                  step={2}
-                  suffix=""
-                  onChange={(cloudOffsetY) => updateSettings({ cloudOffsetY })}
-                  formatValue={(value) => `${value > 0 ? '+' : ''}${Math.round(value)}px`}
-                />
-              </SettingRow>
-            </Panel>
-            <Panel title="宠物库">
-              <div className="pet-grid">
-                {snapshot.pets.map((item) => (
-                  <button
-                    key={item.id}
-                    className={`pet-card ${snapshot.settings.currentPetId === item.id ? 'selected' : ''}`}
-                    onClick={() => updateSettings({ currentPetId: item.id })}
-                  >
-                    {item.source === 'imported' && (
-                      <span
-                        role="button"
-                        tabIndex={0}
-                        className="pet-delete"
-                        title="删除自定义宠物"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          void deletePet(item);
-                        }}
-                        onKeyDown={(event) => {
-                          if (event.key !== 'Enter' && event.key !== ' ') return;
-                          event.preventDefault();
-                          event.stopPropagation();
-                          void deletePet(item);
-                        }}
-                      >
-                        <Trash2 size={15} />
-                      </span>
-                    )}
-                    <PetPreview pet={item} />
-                    <strong>{item.displayName}</strong>
-                    <small>{item.source === 'bundled' ? '内置宠物' : '自定义宠物'}</small>
-                  </button>
-                ))}
-              </div>
-              <div className="panel-actions">
-                <button className="primary-button" onClick={importPet}><FolderInput size={17} />导入宠物</button>
-              </div>
-            </Panel>
+              </Panel>
+            )}
+            {petTab === 'companion' && (
+              <>
+                <Panel title="智能陪伴">
+                  <div className="settings-grid two">
+                    <MiniSetting title="聊天功能" caption="开启角色对话">
+                      <Switch checked={snapshot.settings.companion.enabled} onChange={(enabled) => updateCompanion({ enabled })} />
+                    </MiniSetting>
+                    <MiniSetting title="主动说话" caption="空闲时冒泡">
+                      <Switch checked={snapshot.settings.companion.proactiveEnabled} onChange={(proactiveEnabled) => updateCompanion({ proactiveEnabled })} />
+                    </MiniSetting>
+                    <MiniSetting title="主动频率" caption="单位：秒">
+                      <IntervalInput minutes={snapshot.settings.companion.replyFrequencyMinutes} onChange={(replyFrequencyMinutes) => updateCompanion({ replyFrequencyMinutes })} />
+                    </MiniSetting>
+                    <MiniSetting title="气泡模式" caption="文案来源">
+                      <select value={snapshot.settings.companion.bubbleMode} onChange={(event) => updateCompanion({ bubbleMode: event.target.value as CompanionSettings['bubbleMode'] })}>
+                        <option value="manual">手动气泡</option>
+                        <option value="companion">角色回复</option>
+                        <option value="mixed">混合展示</option>
+                      </select>
+                    </MiniSetting>
+                  </div>
+                </Panel>
+                <Panel title="快捷聊天">
+                  <div className="settings-chat-log compact">
+                    {snapshot.companion.recentMessages.slice(-5).map((message) => (
+                      <div key={message.id} className={`settings-chat-message ${message.role}`}>
+                        <strong>{message.role === 'user' ? '你' : pet?.displayName ?? '角色'}</strong>
+                        <span>{message.content}</span>
+                      </div>
+                    ))}
+                    {snapshot.companion.recentMessages.length === 0 && <div className="settings-chat-empty">开启聊天功能后，可以先在这里测试角色回复。</div>}
+                  </div>
+                  <form className="settings-chat-form" onSubmit={(event) => { event.preventDefault(); void sendSettingsChatMessage(); }}>
+                    <input className="text-input" value={settingsChatText} disabled={!snapshot.settings.companion.enabled || settingsChatBusy} onChange={(event) => setSettingsChatText(event.target.value)} placeholder={snapshot.settings.companion.enabled ? '输入一句话测试角色回复' : '先开启聊天功能'} />
+                    <button className="primary-button" disabled={!snapshot.settings.companion.enabled || settingsChatBusy || !settingsChatText.trim()}>{settingsChatBusy ? '回复中' : '发送'}</button>
+                  </form>
+                </Panel>
+                <Panel title="角色设定">
+                  <div className="persona-grid">
+                    <label><span>称呼</span><input className="text-input" value={personaDraft.nickname} onChange={(event) => setPersonaDraft((current) => ({ ...current, nickname: event.target.value }))} /></label>
+                    <label><span>性格</span><textarea className="persona-input" rows={2} value={personaDraft.personality} onChange={(event) => setPersonaDraft((current) => ({ ...current, personality: event.target.value }))} /></label>
+                    <label><span>语气</span><textarea className="persona-input" rows={2} value={personaDraft.tone} onChange={(event) => setPersonaDraft((current) => ({ ...current, tone: event.target.value }))} /></label>
+                    <label><span>关系感</span><textarea className="persona-input" rows={2} value={personaDraft.relationship} onChange={(event) => setPersonaDraft((current) => ({ ...current, relationship: event.target.value }))} /></label>
+                    <label><span>说话风格</span><textarea className="persona-input" rows={2} value={personaDraft.speakingStyle} onChange={(event) => setPersonaDraft((current) => ({ ...current, speakingStyle: event.target.value }))} /></label>
+                  </div>
+                  <div className="panel-actions"><button className="primary-button" onClick={() => void savePersona()}>保存设定</button></div>
+                </Panel>
+                <Panel title="记忆与模型">
+                  <div className="companion-columns">
+                    <div className="subsection-card">
+                      <div className="subsection-head"><strong>角色记忆</strong><Switch checked={snapshot.settings.companion.memoryEnabled} onChange={(memoryEnabled) => updateCompanion({ memoryEnabled })} /></div>
+                      <p>{memorySummaryText(snapshot)}</p>
+                      <div className="memory-facts compact">{snapshot.companion.currentPetMemory.facts.slice(0, 5).map((fact) => <span key={fact}>{fact}</span>)}</div>
+                      <button className="secondary-button" onClick={clearCompanionMemory}><Eraser size={16} />清除记忆</button>
+                    </div>
+                    <div className="subsection-card model-config-card">
+                      <div className="subsection-head">
+                        <strong>模型服务</strong>
+                        <span className={activeModelConfigured ? 'status-ok' : 'status-muted'}>{activeModelConfigured ? '已配置' : '本地回退'}</span>
+                      </div>
+                      <div className="model-config-toolbar">
+                        <label className="model-field compact">
+                          <span>当前配置</span>
+                          <select value={snapshot.settings.companion.activeModelConfigId} onChange={(event) => void selectModelConfig(event.target.value)}>
+                            {snapshot.settings.companion.modelConfigs.map((config) => <option key={config.id} value={config.id}>{config.name}</option>)}
+                          </select>
+                        </label>
+                        <div className="model-config-actions">
+                          <button className="secondary-button" onClick={() => void addModelConfig()}>新增</button>
+                          <button className="secondary-button" disabled={snapshot.settings.companion.modelConfigs.length <= 1} onClick={deleteActiveModelConfig}>删除</button>
+                        </div>
+                      </div>
+                      {modelDraft && (
+                        <div className="model-config-form">
+                          <label className="model-field">
+                            <span>配置名称</span>
+                            <input className="text-input" value={modelDraft.name} onChange={(event) => updateModelDraft({ name: event.target.value })} placeholder="例如 DeepSeek 日常聊天" />
+                          </label>
+                          <label className="model-field">
+                            <span>服务类型</span>
+                            <select value={modelDraft.provider} onChange={(event) => updateCompanionProvider(event.target.value as CompanionSettings['provider'])}>
+                              {Object.entries(companionProviderPresets).map(([provider, preset]) => <option key={provider} value={provider}>{preset.label}</option>)}
+                            </select>
+                          </label>
+                          <label className="model-field wide">
+                            <span>API Base URL</span>
+                            <input className="text-input" value={modelDraft.apiBaseUrl} onChange={(event) => updateModelDraft({ apiBaseUrl: event.target.value })} placeholder="https://api.deepseek.com" />
+                          </label>
+                          <label className="model-field">
+                            <span>模型</span>
+                            <input className="text-input" value={modelDraft.model} onChange={(event) => updateModelDraft({ model: event.target.value })} placeholder="deepseek-chat / glm-4-flash" />
+                          </label>
+                          <label className="model-field">
+                            <span>API Key</span>
+                            <input className="text-input" type="password" value={modelDraft.apiKey} placeholder="只保存在本机" onChange={(event) => updateModelDraft({ apiKey: event.target.value })} />
+                          </label>
+                        </div>
+                      )}
+                      {snapshot.companion.status.lastError && <p className="error-text">{snapshot.companion.status.lastError}</p>}
+                      <div className="model-config-footer">
+                        <span>{modelDraft?.provider === 'disabled' ? '选择 DeepSeek、GLM 或兼容服务后即可填写大模型配置。' : '当前配置会用于聊天、主动说话和连接测试。'}</span>
+                        <div className="model-config-footer-actions">
+                          <button className="secondary-button" disabled={!modelDraft || !modelDraftDirty} onClick={() => void saveModelConfig()}>保存配置</button>
+                          <button className="primary-button" disabled={testingProvider || !modelDraft || modelDraft.provider === 'disabled'} onClick={() => void testSelectedModelProvider()}><Zap size={16} />{testingProvider ? '测试中' : '测试连接'}</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Panel>
+              </>
+            )}
           </>
-        )}
-        {active === 'behavior' && (
-          <Panel title="行为">
-            <SettingRow title="双击互动" caption="双击宠物会触发开心动画">
-              <Switch checked onChange={() => undefined} />
-            </SettingRow>
-            <SettingRow title="位置保护" caption="拖动时限制在当前显示器工作区域内">
-              <Switch checked onChange={() => undefined} />
-            </SettingRow>
-            <SettingRow title="配置恢复" caption="资源缺失或配置损坏时恢复默认宠物">
-              <Switch checked onChange={() => undefined} />
-            </SettingRow>
-          </Panel>
         )}
         {active === 'sound' && (
           <Panel title="声音">
@@ -624,6 +1092,18 @@ function sanitizeCloudMessages(values: string[]) {
     : ['人，你真棒！', '人，累了记得休息，我会一直陪着你'];
 }
 
+function cloudMessageForMode(mode: CompanionSettings['bubbleMode'], manualMessage: string, companionMessage: string) {
+  if (mode === 'companion') return companionMessage;
+  if (mode === 'mixed') return companionMessage || manualMessage;
+  return manualMessage;
+}
+
+function memorySummaryText(snapshot: AppSnapshot) {
+  const memory = snapshot.companion.currentPetMemory;
+  if (memory.facts.length === 0) return '暂时还没有长期记忆，聊天后会记录成简短标签。';
+  return `已记录 ${memory.facts.length} 条记忆标签。`;
+}
+
 function petCloudLayout(scale: number) {
   void scale;
   return {
@@ -661,6 +1141,27 @@ function SettingRow({ title, caption, children }: { title: string; caption: stri
   );
 }
 
+function MiniSetting({ title, caption, children }: { title: string; caption: string; children: React.ReactNode }) {
+  return (
+    <div className="mini-setting">
+      <div>
+        <strong>{title}</strong>
+        <p>{caption}</p>
+      </div>
+      <div>{children}</div>
+    </div>
+  );
+}
+
+function StatusTile({ title, text, active }: { title: string; text: string; active: boolean }) {
+  return (
+    <div className={`status-tile ${active ? 'active' : ''}`}>
+      <strong>{title}</strong>
+      <span>{text}</span>
+    </div>
+  );
+}
+
 function Switch({ checked, onChange }: { checked: boolean; onChange: (checked: boolean) => void | Promise<void> }) {
   return (
     <button className={`switch ${checked ? 'checked' : ''}`} onClick={() => void onChange(!checked)} aria-pressed={checked}>
@@ -690,6 +1191,41 @@ function Range({
     <div className="range-control">
       <span>{formatValue ? formatValue(value) : `${value.toFixed(1)}${suffix}`}</span>
       <input type="range" value={value} min={min} max={max} step={step} onChange={(event) => void onChange(Number(event.target.value))} />
+    </div>
+  );
+}
+
+function IntervalInput({
+  minutes,
+  onChange
+}: {
+  minutes: number;
+  onChange: (minutes: number) => void | Promise<void>;
+}) {
+  const [draft, setDraft] = useState(() => String(Math.round(minutes * 60)));
+  useEffect(() => {
+    setDraft(String(Math.round(minutes * 60)));
+  }, [minutes]);
+  const commit = (value: string) => {
+    if (!value.trim()) return;
+    const nextSeconds = Number(value);
+    if (!Number.isFinite(nextSeconds)) return;
+    void onChange(nextSeconds / 60);
+  };
+  return (
+    <div className="interval-control">
+      <input
+        type="number"
+        step={1}
+        value={draft}
+        onChange={(event) => {
+          const value = event.target.value;
+          setDraft(value);
+          if (value.trim()) commit(value);
+        }}
+        onBlur={() => commit(draft)}
+      />
+      <span>秒</span>
     </div>
   );
 }

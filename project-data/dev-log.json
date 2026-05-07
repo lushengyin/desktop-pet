@@ -385,6 +385,394 @@
       "changedFiles": [
         "src/main/main.ts"
       ]
+    },
+    {
+      "id": "LOG-2026-05-06-001",
+      "date": "2026-05-06",
+      "type": "planning",
+      "summary": "按用户新需求拆分智能陪伴与角色记忆功能，仅更新规划文档和 project-data：新增 R13-R18 与 M7/T7.1-T7.8，等待用户确认后再进入开发。",
+      "changedFiles": [
+        "project-data/requirements.json",
+        "project-data/tasks.json",
+        "project-data/project.json",
+        "project-data/confirmed-plan.json",
+        "project-data/decisions.json",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/project/PRD.md",
+        "docs/project/TASKS.md",
+        "docs/project/CONFIRMED_PLAN.md",
+        "docs/qa/TEST_PLAN.md",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DECISIONS.md",
+        "docs/records/DEV_LOG.md"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-06-002",
+      "date": "2026-05-06",
+      "type": "feature",
+      "summary": "实现智能陪伴第一版：AppSettings 新增 companion 配置；主进程按 petId 存储独立聊天记录和记忆摘要，提供 OpenAI-compatible 回复服务抽象与本地回退；设置页新增陪伴配置、记忆管理和模型配置；宠物窗口新增快捷聊天框、主动说话调度和手动/AI/混合气泡模式。验证通过 typecheck、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/shared/types.ts",
+        "src/main/main.ts",
+        "src/preload/index.ts",
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css",
+        "project-data/tasks.json",
+        "docs/project/TASKS.md",
+        "docs/qa/TEST_PLAN.md",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-06-003",
+      "date": "2026-05-06",
+      "type": "improvement",
+      "summary": "扩展智能陪伴模型供应商配置：新增 deepseek 和 glm provider，设置页切换供应商时自动应用 DeepSeek/GLM 推荐 Base URL 与默认模型，主进程配置判断从单一 OpenAI-compatible 扩展为任意已配置 provider。验证通过 typecheck、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/shared/types.ts",
+        "src/main/main.ts",
+        "src/renderer/main.tsx",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md",
+        "docs/qa/TEST_PLAN.md"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-06-004",
+      "date": "2026-05-06",
+      "type": "improvement",
+      "summary": "将智能陪伴主动频率控件从 3-120 分钟滑杆改为秒级数字输入框，并把主进程设置校验和桌面主动说话调度最低值调整为 5 秒，便于短间隔测试。验证通过 typecheck、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/main/main.ts",
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-06-005",
+      "date": "2026-05-06",
+      "type": "improvement",
+      "summary": "精简智能陪伴模型服务配置 UI，将长说明改为短 caption 与底部状态；新增 companion:testProvider IPC，使用当前配置发起 Chat Completions 测试请求并返回明确成功/失败提示。验证通过 typecheck、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/shared/types.ts",
+        "src/main/main.ts",
+        "src/preload/index.ts",
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md",
+        "docs/qa/TEST_PLAN.md"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-06-006",
+      "date": "2026-05-06",
+      "type": "improvement",
+      "summary": "根据用户反馈优化智能陪伴设置：主动频率输入框移除 5 秒 UI 下限，调度按用户输入值计算；角色记忆更新不再追加角色主动说话和助手回复流水账，仅保留最多 8 条用户事实标签，设置页只显示数量摘要和最近标签。验证通过 typecheck、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/main/main.ts",
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-06-007",
+      "date": "2026-05-06",
+      "type": "fix",
+      "summary": "修复主动频率数字输入框清空后被受控值立即回填旧秒数的问题：IntervalInput 改为本地 draft 状态，空值时不提交设置，用户输入有效数字或失焦时再同步。验证通过 typecheck、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/renderer/main.tsx",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-06-008",
+      "date": "2026-05-06",
+      "type": "feature",
+      "summary": "新增 CompanionPersona 数据模型和每角色 persona.json 存储；设置页陪伴模块新增角色设定面板，可配置称呼、性格、语气、关系感和说话风格，并将这些配置写入 companion system prompt。验证通过 typecheck、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/shared/types.ts",
+        "src/main/main.ts",
+        "src/preload/index.ts",
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-06-009",
+      "date": "2026-05-06",
+      "type": "improvement",
+      "summary": "优化陪伴设置交互：角色设定表单改为本地 personaDraft 和手动保存，避免每次输入触发 IPC/snapshot 回刷导致光标乱跳；将“主动回复”文案改为“聊天功能”，并新增设置页快捷聊天区用于直接测试当前角色对话。验证通过 typecheck、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-06-010",
+      "date": "2026-05-06",
+      "type": "fix",
+      "summary": "优化桌面宠物快捷聊天入口：按钮从宠物身体下方移到右上侧，改为“聊”标识，并同步调整 pet:setInteractiveRegions 坐标，避免透明区域穿透导致点击无效。验证通过 typecheck、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-06-011",
+      "date": "2026-05-06",
+      "type": "improvement",
+      "summary": "根据用户反馈移除桌面宠物旁的蓝色聊天入口和对应 pet-chat 样式，保留设置页陪伴模块中的快捷聊天。验证通过 typecheck、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-06-012",
+      "date": "2026-05-06",
+      "type": "feature",
+      "summary": "将云朵气泡尾巴菱形改为可点击快捷聊天入口：保留气泡尾巴视觉，hover 轻微反馈，点击后打开桌面聊天框，并按气泡/聊天框状态动态设置 pet interactive regions 以兼容透明穿透。验证通过 typecheck、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-06-013",
+      "date": "2026-05-06",
+      "type": "fix",
+      "summary": "修复 macOS 菜单栏图标不可见问题：将 tray icon 加载收敛到 loadTrayIcon，并对资源图标/系统兜底图标调用 setTemplateImage(true)，让 macOS 按菜单栏主题渲染可见图标。验证通过 typecheck、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/main/main.ts",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-06-014",
+      "date": "2026-05-06",
+      "type": "fix",
+      "summary": "继续修复菜单栏图标不可见：历史代码未在智能陪伴功能中改动 tray，初步判断是原彩色透明宠物截图图标在当前菜单栏渲染不可见；已将 build/tray.png 替换为确定可见的 36x36 黑白 alpha template 图标，并确认打包后的 Resources/tray.png 与源文件一致。验证通过 typecheck、package、打包产物 smoke test。",
+      "changedFiles": [
+        "build/tray.png",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-06-015",
+      "date": "2026-05-06",
+      "type": "improvement",
+      "summary": "重构设置页宠物模块：移除左侧独立“陪伴”和“行为”导航，将形象动画、互动行为、智能陪伴作为宠物页内部分段标签；陪伴配置改为网格卡片、角色设定表单和记忆/模型双列布局，减少大段说明和臃肿行高。验证通过 typecheck、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-06-016",
+      "date": "2026-05-06",
+      "type": "fix",
+      "summary": "修复智能陪伴页布局问题：persona-grid 第一项独占一行，输入控件宽度跟随列宽；记忆与模型配置改为单列自适应，subsection-card 防止内容横向溢出，避免 API 配置显示不全。验证通过 typecheck、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/renderer/styles.css",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-06-017",
+      "date": "2026-05-06",
+      "type": "fix",
+      "summary": "修复宠物页云朵偏移卡片布局：为包含 range-control 的 mini-setting 增加单列自适应样式，滑杆宽度使用 minmax(0, 1fr) 和 100%，避免标题被固定滑杆宽度挤成竖排。验证通过 typecheck、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/renderer/styles.css",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-06-018",
+      "date": "2026-05-06",
+      "type": "improvement",
+      "summary": "优化主动频率数字输入框外观：隐藏 WebKit 原生 number spinner，上下箭头不再显示，使控件更贴合深色卡片风格。验证通过 typecheck、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/renderer/styles.css",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-06-019",
+      "date": "2026-05-06",
+      "type": "improvement",
+      "summary": "将宠物库从大卡片网格改为可搜索、可按来源筛选的紧凑列表：保留小缩略图、名称、来源、atlas 信息、当前标识和自定义宠物删除操作，并限制列表高度独立滚动，适配未来大量宠物。验证通过 typecheck、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-06-020",
+      "date": "2026-05-06",
+      "type": "improvement",
+      "summary": "优化桌面聊天气泡交互：云朵气泡常态只显示气泡和尾巴，hover 时在右下角显示“回复”按钮，点击打开桌面聊天框；同时将每个角色 messages.json 上限从 80 条收紧为 40 条，长期记忆仍只保留最多 8 条用户事实标签。验证通过 typecheck、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/main/main.ts",
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-06-021",
+      "date": "2026-05-06",
+      "type": "improvement",
+      "summary": "桌面聊天框新增右上角收起按钮，并为聊天记录顶部补充按钮安全间距，用户可以随时关闭聊天面板恢复普通气泡显示。验证通过 typecheck、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-06-022",
+      "date": "2026-05-06",
+      "type": "improvement",
+      "summary": "模型服务配置从单一表单升级为多配置管理：用户可以新增、删除、命名并切换模型配置，当前选中的配置用于聊天、主动说话和测试连接；主进程保留旧字段兼容并自动迁移历史单模型设置。验证通过 typecheck、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/shared/types.ts",
+        "src/main/main.ts",
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-07-001",
+      "date": "2026-05-07",
+      "type": "fix",
+      "summary": "修复桌面气泡透明安全区拦截点击的问题：renderer 不再上报硬编码大矩形，而是测量气泡/聊天框真实 DOM 边界；主进程交互区域支持圆角命中，气泡圆角外侧和周围透明区会继续穿透。验证通过 typecheck、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/shared/types.ts",
+        "src/main/main.ts",
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-07-002",
+      "date": "2026-05-07",
+      "type": "improvement",
+      "summary": "新增菜单栏图标开关：AppSettings 增加 showMenuBarIcon，关闭时主进程销毁 Tray，重新打开时恢复 Tray；同时增加宠物右键打开设置、Dock 激活打开设置和应用菜单 Cmd+, 设置入口，避免菜单栏空间不足时失去管理入口。验证通过 typecheck、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/shared/types.ts",
+        "src/main/main.ts",
+        "src/renderer/main.tsx",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-07-003",
+      "date": "2026-05-07",
+      "type": "fix",
+      "summary": "重排模型服务配置卡片：将配置选择、新增/删除操作和当前配置详情拆成独立区域，为服务类型、Base URL、模型名和 API Key 增加明确标签，并在未选择模型服务时给出本地回退说明。验证通过 typecheck、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md"
+      ]
+    },
+    {
+      "id": "LOG-2026-05-07-004",
+      "date": "2026-05-07",
+      "type": "fix",
+      "summary": "模型服务配置改为本地草稿编辑加手动保存：输入不会立即写入设置，点击保存配置后才同步；测试连接会先保存未提交改动。应用菜单补回标准编辑角色，恢复 Cmd+V 粘贴 API Key。验证通过 typecheck、package、打包产物 smoke test。",
+      "changedFiles": [
+        "src/main/main.ts",
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md"
+      ]
     }
   ]
 }

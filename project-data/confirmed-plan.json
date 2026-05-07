@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-05-04",
+  "updatedAt": "2026-05-06",
   "status": "confirmed_waiting_for_development_start",
   "confirmedByUser": true,
   "confirmations": [
@@ -62,6 +62,15 @@
       "needsUserAnswer": false,
       "confirmedAt": "2026-05-04",
       "userAnswer": "github 仓库已创建：git@github.com:lushengyin/desktop-pet.git"
+    },
+    {
+      "id": "C8",
+      "topic": "智能陪伴与角色记忆",
+      "status": "confirmed",
+      "proposal": "新增智能陪伴模块：角色可主动说话，用户可通过聊天框互动；角色具备长期记忆，且每个角色有独立记忆空间；同时保留现有手动气泡展示，并提供手动气泡、AI 回复、混合模式选择。",
+      "needsUserAnswer": false,
+      "confirmedAt": "2026-05-06",
+      "userAnswer": "可以，就按这个来吧。"
     }
   ]
 }
