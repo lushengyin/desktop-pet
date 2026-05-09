@@ -869,6 +869,22 @@
         "docs/records/CHANGELOG.md",
         "docs/records/DEV_LOG.md"
       ]
+    },
+    {
+      "id": "LOG-2026-05-10-001",
+      "date": "2026-05-10",
+      "type": "improvement",
+      "summary": "设置页主题新增浅色模式：ThemeMode 扩展为 dark/light/system，主进程设置校验允许 light，renderer 根据系统外观解析 system，并补充浅色主题样式覆盖。验证通过 typecheck。",
+      "changedFiles": [
+        "src/shared/types.ts",
+        "src/main/main.ts",
+        "src/renderer/main.tsx",
+        "src/renderer/styles.css",
+        "project-data/changelog.json",
+        "project-data/dev-log.json",
+        "docs/records/CHANGELOG.md",
+        "docs/records/DEV_LOG.md"
+      ]
     }
   ]
 }

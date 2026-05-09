@@ -79,3 +79,7 @@ Use `project-data/dev-log.json` as the source of truth.
 - 修复模型配置详情无法收起：展开项兜底 effect 之前会把 null 误判为缺失项并重新展开当前模型，现在仅在已展开的模型被删除时才回退到当前模型。验证通过 typecheck、package、打包产物 smoke test。
 - 统一表单控件焦点样式：移除按钮、下拉、输入框和文本域聚焦时的系统黄色描边，改为与深色界面更协调的青绿色弱焦点环。验证通过 typecheck。
 - 设置页左上角品牌头像改为 PetAvatarBadge，读取当前宠物 spritesheet 首帧并沿用宠物页缩略图比例；移除固定 Lu 占位和额外装饰点。验证通过 typecheck、package、打包产物 smoke test。
+
+## 2026-05-10
+
+- 设置页主题新增浅色模式：ThemeMode 扩展为 dark/light/system，主进程设置校验允许 light，renderer 根据系统外观解析 system，并补充浅色主题样式覆盖。验证通过 typecheck。

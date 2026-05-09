@@ -483,6 +483,7 @@ function SettingsView({
   const [companionPage, setCompanionPage] = useState<'overview' | 'models'>('overview');
   const [petQuery, setPetQuery] = useState('');
   const [petSourceFilter, setPetSourceFilter] = useState<'all' | 'bundled' | 'imported'>('all');
+  const [prefersLightTheme, setPrefersLightTheme] = useState(false);
   const pet = currentPet(snapshot);
   const filteredPets = snapshot.pets.filter((item) => {
     const query = petQuery.trim().toLowerCase();
@@ -492,6 +493,18 @@ function SettingsView({
     const matchesSource = petSourceFilter === 'all' || item.source === petSourceFilter;
     return matchesQuery && matchesSource;
   });
+  const resolvedTheme = snapshot.settings.theme === 'system'
+    ? (prefersLightTheme ? 'light' : 'dark')
+    : snapshot.settings.theme;
+
+  useEffect(() => {
+    if (!window.matchMedia) return;
+    const query = window.matchMedia('(prefers-color-scheme: light)');
+    const syncTheme = () => setPrefersLightTheme(query.matches);
+    syncTheme();
+    query.addEventListener('change', syncTheme);
+    return () => query.removeEventListener('change', syncTheme);
+  }, []);
 
   useEffect(() => {
     if (!notice) return;
@@ -695,7 +708,7 @@ function SettingsView({
   };
 
   return (
-    <main className="settings-shell">
+    <main className={`settings-shell theme-${resolvedTheme}`}>
       <div className="window-drag-region" aria-hidden="true" />
       <aside className="sidebar">
         <div className="brand">
@@ -739,9 +752,10 @@ function SettingsView({
             <SettingRow title="菜单栏图标" caption="关闭后可通过 Dock、快捷键或宠物右键打开设置">
               <Switch checked={snapshot.settings.showMenuBarIcon} onChange={(showMenuBarIcon) => updateSettings({ showMenuBarIcon })} />
             </SettingRow>
-            <SettingRow title="主题" caption="当前产品优先使用深色面板">
+            <SettingRow title="主题" caption="选择设置窗口的显示主题">
               <select value={snapshot.settings.theme} onChange={(event) => updateSettings({ theme: event.target.value as AppSettings['theme'] })}>
                 <option value="dark">深色</option>
+                <option value="light">浅色</option>
                 <option value="system">跟随系统</option>
               </select>
             </SettingRow>

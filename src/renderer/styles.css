@@ -369,6 +369,138 @@ button {
   filter: drop-shadow(0 6px 9px rgb(0 0 0 / 0.18));
 }
 
+.settings-shell.theme-light {
+  color: #202226;
+  background:
+    radial-gradient(circle at 18% 8%, rgb(112 214 189 / 0.16), transparent 28%),
+    linear-gradient(135deg, #f6f7f2 0%, #eceff1 48%, #e2e8ec 100%);
+}
+
+.settings-shell.theme-light .sidebar {
+  border-right-color: rgb(27 35 42 / 0.1);
+  background: rgb(255 255 255 / 0.42);
+}
+
+.settings-shell.theme-light .brand h1,
+.settings-shell.theme-light .content-header h2,
+.settings-shell.theme-light .panel h3,
+.settings-shell.theme-light .setting-row strong,
+.settings-shell.theme-light .mini-setting strong,
+.settings-shell.theme-light .status-tile strong,
+.settings-shell.theme-light .subsection-head strong,
+.settings-shell.theme-light .persona-grid span,
+.settings-shell.theme-light .pet-detail h3,
+.settings-shell.theme-light .model-config-main strong,
+.settings-shell.theme-light .model-service-entry strong {
+  color: #202226;
+}
+
+.settings-shell.theme-light .brand p,
+.settings-shell.theme-light .eyebrow,
+.settings-shell.theme-light .setting-row p,
+.settings-shell.theme-light .mini-setting p,
+.settings-shell.theme-light .status-tile span,
+.settings-shell.theme-light .subsection-card p,
+.settings-shell.theme-light .pet-detail p,
+.settings-shell.theme-light .nav-item small,
+.settings-shell.theme-light .settings-subpage-header span,
+.settings-shell.theme-light .model-config-main small,
+.settings-shell.theme-light .model-service-entry span {
+  color: #6f7480;
+}
+
+.settings-shell.theme-light .nav-list {
+  scrollbar-color: rgb(32 34 38 / 0.22) transparent;
+}
+
+.settings-shell.theme-light .nav-list::-webkit-scrollbar-thumb {
+  background: rgb(32 34 38 / 0.2);
+}
+
+.settings-shell.theme-light .nav-item {
+  color: #25282d;
+  background: rgb(255 255 255 / 0.54);
+  border-color: rgb(31 38 45 / 0.08);
+}
+
+.settings-shell.theme-light .nav-item:hover {
+  background: rgb(255 255 255 / 0.76);
+}
+
+.settings-shell.theme-light .nav-item.active {
+  background: rgb(255 255 255 / 0.9);
+  border-color: rgb(31 38 45 / 0.16);
+}
+
+.settings-shell.theme-light .icon-button,
+.settings-shell.theme-light .secondary-button {
+  color: #23262b;
+  background: rgb(26 32 39 / 0.08);
+}
+
+.settings-shell.theme-light .panel,
+.settings-shell.theme-light .mini-setting,
+.settings-shell.theme-light .status-tile,
+.settings-shell.theme-light .subsection-card,
+.settings-shell.theme-light .section-tabs,
+.settings-shell.theme-light .model-service-entry,
+.settings-shell.theme-light .model-config-item {
+  background: rgb(255 255 255 / 0.72);
+  border-color: rgb(31 38 45 / 0.1);
+  box-shadow: 0 20px 44px rgb(47 61 74 / 0.08);
+}
+
+.settings-shell.theme-light .setting-row,
+.settings-shell.theme-light .model-config-details {
+  border-top-color: rgb(31 38 45 / 0.1);
+}
+
+.settings-shell.theme-light .section-tabs button {
+  color: #68707b;
+}
+
+.settings-shell.theme-light .section-tabs button.active {
+  color: #202226;
+  background: rgb(32 34 38 / 0.08);
+}
+
+.settings-shell.theme-light select,
+.settings-shell.theme-light .text-input,
+.settings-shell.theme-light textarea {
+  color: #202226;
+  background: rgb(255 255 255 / 0.86);
+  border-color: rgb(31 38 45 / 0.16);
+}
+
+.settings-shell.theme-light select option {
+  color: #202226;
+  background: #ffffff;
+}
+
+.settings-shell.theme-light .tag-row span {
+  color: #4f5661;
+  background: rgb(32 34 38 / 0.08);
+}
+
+.settings-shell.theme-light .switch {
+  background: rgb(31 38 45 / 0.2);
+}
+
+.settings-shell.theme-light .switch span {
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgb(31 38 45 / 0.16);
+}
+
+.settings-shell.theme-light .switch.checked {
+  background: #3478f6;
+}
+
+.settings-shell.theme-light .notice {
+  color: #0d6d4f;
+  background: rgb(112 214 189 / 0.18);
+  border-color: rgb(52 140 104 / 0.22);
+}
+
 .brand h1,
 .brand p,
 .content-header h2,

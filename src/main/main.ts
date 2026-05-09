@@ -213,7 +213,7 @@ function sanitizeSettings(value: Partial<AppSettings>): AppSettings {
     cloudMessages: cloudMessages.length > 0 ? cloudMessages : defaultSettings.cloudMessages,
     cloudOffsetX: clamp(Number(merged.cloudOffsetX) || defaultSettings.cloudOffsetX, -80, 80),
     cloudOffsetY: clamp(Number(merged.cloudOffsetY) || defaultSettings.cloudOffsetY, -80, 80),
-    theme: merged.theme === 'system' ? 'system' : 'dark',
+    theme: merged.theme === 'light' || merged.theme === 'system' ? merged.theme : 'dark',
     launchAtLogin: Boolean(merged.launchAtLogin),
     showMenuBarIcon: merged.showMenuBarIcon !== false,
     soundEnabled: Boolean(merged.soundEnabled),

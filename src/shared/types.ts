@@ -1,6 +1,6 @@
 export type PetMood = 'idle' | 'dragging' | 'happy' | 'sleepy';
 
-export type ThemeMode = 'dark' | 'system';
+export type ThemeMode = 'dark' | 'light' | 'system';
 export type PetAction =
   | 'idle'
   | 'running-right'
