@@ -482,6 +482,42 @@ button {
   background: rgb(32 34 38 / 0.08);
 }
 
+.settings-shell.theme-light .pet-library-toolbar > span,
+.settings-shell.theme-light .pet-list-item small,
+.settings-shell.theme-light .pet-list-empty {
+  color: #737a85;
+}
+
+.settings-shell.theme-light .pet-list-item {
+  color: #202226;
+  background: rgb(255 255 255 / 0.58);
+  border-color: rgb(31 38 45 / 0.08);
+}
+
+.settings-shell.theme-light .pet-list-item:hover {
+  background: rgb(255 255 255 / 0.82);
+}
+
+.settings-shell.theme-light .pet-list-item.selected {
+  color: #162c26;
+  border-color: rgb(62 196 164 / 0.62);
+  background: rgb(112 214 189 / 0.16);
+}
+
+.settings-shell.theme-light .pet-list-item em {
+  color: #1cae83;
+}
+
+.settings-shell.theme-light .pet-list-delete {
+  color: #e25555;
+  background: rgb(255 96 96 / 0.1);
+  border-color: rgb(255 96 96 / 0.24);
+}
+
+.settings-shell.theme-light .pet-list-empty {
+  background: rgb(255 255 255 / 0.56);
+}
+
 .settings-shell.theme-light .switch {
   background: rgb(31 38 45 / 0.2);
 }
